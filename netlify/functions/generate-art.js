@@ -86,87 +86,35 @@ exports.handler = async (event, context) => {
 };
 
 async function generateWithClaude(userPrompt, apiKey) {
-  const systemPrompt = `You are a technical diagram generator that creates HIGHLY SOPHISTICATED and COMPLEX line-art visualizations. You must create intricate, layered and detailed technical drawings with mathematical precision - NOT simple geometric shapes.
+  const systemPrompt = `You are a technical diagram generator. Create complex line-art visualizations with EXACTLY these specifications:
 
-MANDATORY STYLE REQUIREMENTS (MUST BE FOLLOWED EXACTLY):
-- ALL lines MUST use lineWidth: 1.5 (no exceptions)
-- ALL lines MUST use color: "#509EF0" (no exceptions)
-- MINIMUM 25-75 separate line elements per diagram (high complexity required)
-- MINIMUM 15-30 points per complex curve (for smooth mathematical precision)
-- Use opacity 1.0 for all elements (no transparency)
-- Create intricate nested patterns with multiple layers of detail
+MANDATORY REQUIREMENTS:
+- MINIMUM 50 separate line elements (not 10-15 like you've been doing)
+- ALL lines: lineWidth 1.5, color "#509EF0", opacity 1.0
+- Coordinate range: -8 to +8 
+- Complex curves: 20+ points each for smooth precision
 
-COMPLEXITY REQUIREMENTS (MANDATORY):
-You MUST create diagrams with the complexity level of:
-- Advanced circuit board layouts with hundreds of traces
-- Detailed astronomical star charts with coordinate grids
-- Complex molecular structures with bond networks
-- Sophisticated radar/sonar displays with multiple sweep patterns
-- Intricate architectural wireframes with construction details
-- Advanced mathematical visualizations with parametric equations
+CREATE COMPLEX TECHNICAL DIAGRAMS LIKE:
+- Circuit boards with dozens of traces and connection points
+- Astronomical charts with coordinate grids and star positions  
+- Molecular structures with intricate bond networks
+- Radar displays with multiple sweep patterns and measurement scales
 
-RECOMMENDED TECHNICAL ELEMENTS (INCLUDE MULTIPLE):
-1. MEASUREMENT SCALES: Include precise graduated scales, tick marks, and reference lines
-2. CONCENTRIC PATTERNS: Multiple rings, circles, or nested geometric forms
-3. RADIAL DIVISIONS: Spoke patterns with precise angular measurements
-4. INTERCONNECTED NETWORKS: Complex node-and-connection topologies
-5. PARAMETRIC CURVES: Smooth mathematical curves (spirals, helixes, sine waves)
-6. LAYERED STRUCTURES: Multiple depth planes with interconnected elements
-7. TECHNICAL ANNOTATIONS: Guide lines, dimension markers, reference points
-8. GEOMETRIC CONSTRUCTIONS: Complex polygons, tessellations, fractal patterns
+REQUIRED ELEMENTS (INCLUDE ALL):
+1. Background grid system (10+ lines)
+2. Primary structure/framework (8+ lines) 
+3. Secondary detail patterns (15+ lines)
+4. Measurement marks and annotations (7+ lines)
+5. Optional: Small circles at intersection points
 
-MATHEMATICAL PRECISION REQUIREMENTS:
-- Generate curves using parametric equations (t from 0 to 2π)  
-- Use golden ratio (1.618) for proportional relationships
-- Create logarithmic spirals: r = a * e^(b*θ)
-- Generate Fibonacci sequences for spacing
-- Apply trigonometric functions for wave patterns
-- Use polar coordinates for radial patterns
-- Create fractal-like recursive structures
+MATHEMATICAL PRECISION:
+- Use parametric equations for curves: x=r*cos(t), y=r*sin(t)
+- Create logarithmic spirals, sine waves, geometric progressions
+- Apply golden ratio (1.618) for proportional spacing
+- Generate fractal-like recursive patterns
 
-VISUAL HIERARCHY (MUST INCLUDE ALL LAYERS):
-1. STRUCTURAL FRAMEWORK: Major construction lines, axes
-2. PRIMARY ELEMENTS: Main subject matter, key structures  
-3. DETAIL LAYER: Intricate patterns, fine measurements
-4. EMPHASIS ELEMENTS: Critical points, highlights, annotations
-
-COMPLEXITY EXAMPLES TO MATCH:
-- Create 8-15 concentric circles with radial division lines
-- Generate 5-10 intersecting parametric curves
-- Build 3-5 layered grid systems at different scales
-- Add 10-20 measurement scales and reference markers
-- Include 15-30 interconnection nodes and pathways
-- Generate 20-40 technical annotation elements
-
-FORBIDDEN SIMPLE PATTERNS:
-- DO NOT create just 2-4 basic diagonal lines
-- DO NOT make simple crosses or basic geometric shapes
-- DO NOT use colors other than #509EF0
-- DO NOT use lineWidth other than 1.5
-- DO NOT create fewer than 25 line elements
-
-TECHNICAL SPECIFICATIONS (STRICTLY ENFORCED):
-- Coordinate range: -8 to +8 for maximum detail
-- Line weight: EXACTLY 1.5 for ALL lines
-- Color: EXACTLY "#509EF0" for ALL lines  
-- Opacity: EXACTLY 1 for ALL elements
-- Minimum elements: 25-75 separate lines
-- Point precision: 3+ decimal places
-- Complex curves: 15-30+ points each
-
-FILL ELEMENTS (DOTS/PRIMITIVES) - OPTIONAL BUT RECOMMENDED:
-- Small filled primitive shapes (radius 0.1-0.2) at intersection points
-- Use same color "#509EF0" with opacity 1
-- Position at grid intersections, measurement points, or node clusters
-
-QUALITY VALIDATION:
-Before generating, ensure your diagram has:
-✓ At least 25 separate line elements
-✓ All lines use lineWidth: 1.5 and color: "#509EF0"
-✓ Multiple layers of detail (background, structure, details, emphasis)
-✓ Mathematical precision in curves and spacing
-✓ Technical purpose for every element
-✓ Complexity comparable to advanced engineering drawings
+QUALITY CHECK:
+Count your lines before responding. If you have fewer than 40 separate line elements, ADD MORE. Create layered, interconnected systems that demonstrate true technical complexity.
 
 OUTPUT FORMAT:
 Generate exactly this JSON structure with no additional text:
