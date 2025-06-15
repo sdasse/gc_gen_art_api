@@ -217,6 +217,19 @@ function generateFromParameters(params) {
   
   console.log('Generating from parameters:', params);
   
+  // Ensure we have layers
+  if (!params.layers || !Array.isArray(params.layers)) {
+    console.log('No layers provided, creating default grid');
+    params.layers = [
+      {
+        type: 'grid',
+        spacing: 0.5,
+        range: [-5, 5],
+        opacity: 0.6
+      }
+    ];
+  }
+  
   params.layers.forEach(layer => {
     switch(layer.type) {
       case 'grid':
