@@ -1,3 +1,4 @@
+
 exports.handler = async (event, context) => {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
@@ -40,57 +41,22 @@ exports.handler = async (event, context) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20250514', // Claude 4
+        model: 'claude-3-5-sonnet-20250514',
         max_tokens: 2000,
         messages: [{
           role: 'user',
           content: `You are generating Three.js line art parameters for: "${prompt}".
 
-AESTHETIC REFERENCE: Create sophisticated technical diagrams similar to scientific instruments, astronomical charts, engineering schematics, radar displays, oscilloscope patterns, and mathematical visualizations. Think:
-- Scientific instrument readouts and measurement tools
-- Astronomical star charts and orbital mechanics diagrams  
-- Engineering blueprints and technical schematics
-- Radar/sonar displays with concentric rings and sweep patterns
-- Oscilloscope waveforms and signal analysis patterns
-- Mathematical function plots and geometric constructions
-- Navigation charts and coordinate systems
-- Data visualization dashboards and monitoring displays
-
-VISUAL STYLE:
-- Monochromatic blue palette (#0066cc, #4d9fff, #1a53cc, #6bb3ff, #0040a0)
-- Clean, precise lines suggesting technical accuracy
-- Mix of geometric grids, concentric circles, and flowing curves
-- Layered information density - background grids with foreground details
-- Scientific typography aesthetic (though we're only doing lines)
-- High contrast between line weights for hierarchy
-- Subtle opacity variations to create depth without losing clarity
-
-TECHNICAL REQUIREMENTS:
-- Generate 8-15 lines for rich detail
-- Each line 6-25 points for smooth precision curves
-- Coordinates between -6 and 6 for optimal framing
-- Line weights: 0.5-2.5 for technical precision
-- Opacity range: 0.4-0.95 for layered visibility
-- Favor mathematical relationships: golden ratio, fibonacci spirals, polar coordinates
-
-PATTERN TYPES TO CONSIDER:
-- Concentric measurement rings with calibration marks
-- Grid systems with coordinate overlays  
-- Spiral patterns (logarithmic, Archimedean, fibonacci)
-- Waveform analysis patterns
-- Network topology diagrams
-- Geometric construction lines
-- Polar coordinate systems
-- Signal processing visualizations
-
-OUTPUT FORMAT (JSON only, no other text):
+Generate a JSON response with this exact structure:
 {
+  "title": "Brief descriptive title",
+  "description": "Technical description of the visualization",
   "lines": [
     {
-      "points": [[x1,y1,z1], [x2,y2,z2], ...],
-      "color": "#blue_hex_value",
-      "opacity": 0.4-0.95,
-      "lineWidth": 0.5-2.5
+      "points": [[x1,y1,z1], [x2,y2,z2], [x3,y3,z3]],
+      "color": "#509EF0",
+      "opacity": 0.7,
+      "lineWidth": 1
     }
   ],
   "camera": {
@@ -98,126 +64,156 @@ OUTPUT FORMAT (JSON only, no other text):
     "lookAt": [0, 0, 0]
   },
   "animation": {
-    "rotate": true/false,
-    "speed": 0.003-0.012,
-    "axis": "y|all"
-  },
-  "title": "Technical/scientific name",
-  "description": "Brief technical description with scientific context"
+    "rotate": false,
+    "speed": 0.008,
+    "axis": "y"
+  }
 }
 
-Create precise, technical line art that feels like sophisticated scientific instrumentation while maintaining aesthetic beauty. Respond with ONLY the JSON object, no additional text.`
+Guidelines:
+- Create multiple lines with 3-10 points each
+- Use coordinates between -10 and 10 for all axes
+- Generate 5-20 lines total
+- Use technical/engineering aesthetic
+- Colors should be variations of blue (#509EF0, #3080D0, #70B0F0)
+- Create patterns that match the prompt theme
+- For radar: circular/radial patterns
+- For oscilloscope: wave patterns  
+- For navigation: grid/coordinate systems
+- For molecular: connected node structures
+
+Return only valid JSON, no other text.`
         }]
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Claude API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      throw new Error('Invalid response from Claude API');
+    const claudeData = await response.json();
+    let generatedContent = claudeData.content[0].text;
+
+    // Clean up the response to ensure valid JSON
+    generatedContent = generatedContent.trim();
+    if (generatedContent.startsWith('```json')) {
+      generatedContent = generatedContent.replace(/```json\n?/, '').replace(/```$/, '');
+    }
+    if (generatedContent.startsWith('```')) {
+      generatedContent = generatedContent.replace(/```\n?/, '').replace(/```$/, '');
     }
 
-    const content = data.content[0].text;
-    
-    // Extract JSON from Claude's response
-    let jsonMatch = content.match(/\{[\s\S]*\}/);
-    
-    if (!jsonMatch) {
-      // Sometimes Claude puts the JSON in code blocks
-      const codeBlockMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-      if (codeBlockMatch) {
-        jsonMatch = [codeBlockMatch[1]];
-      }
-    }
-    
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in Claude response');
-    }
-
-    let params;
+    let artData;
     try {
-      params = JSON.parse(jsonMatch[0]);
+      artData = JSON.parse(generatedContent);
     } catch (parseError) {
-      throw new Error(`Failed to parse JSON: ${parseError.message}`);
-    }
-
-    // Validate the structure
-    if (!params.lines || !Array.isArray(params.lines)) {
-      throw new Error('Invalid response structure: missing lines array');
-    }
-
-    // Add some safety defaults if missing
-    if (!params.camera) {
-      params.camera = {
-        position: [8, 6, 10],
-        lookAt: [0, 0, 0]
-      };
-    }
-
-    if (!params.animation) {
-      params.animation = {
-        rotate: true,
-        speed: 0.008,
-        axis: "y"
-      };
-    }
-
-    if (!params.title) {
-      params.title = "Generated Technical Diagram";
-    }
-
-    if (!params.description) {
-      params.description = "AI-generated technical line art";
-    }
-
-    // Validate and clamp coordinates to safe ranges
-    params.lines.forEach((line, lineIndex) => {
-      if (!line.points || !Array.isArray(line.points)) {
-        throw new Error(`Line ${lineIndex} missing points array`);
-      }
-      
-      line.points = line.points.map(point => {
-        if (!Array.isArray(point) || point.length !== 3) {
-          return [0, 0, 0]; // Default safe point
+      console.error('JSON parse error:', parseError);
+      // Fallback: create a simple default structure
+      artData = {
+        title: "Generated Technical Visualization",
+        description: "AI-generated line art based on prompt",
+        lines: [
+          {
+            points: [[-5, -5, 0], [5, 5, 0], [5, -5, 0], [-5, 5, 0]],
+            color: "#509EF0",
+            opacity: 0.7,
+            lineWidth: 1
+          }
+        ],
+        camera: {
+          position: [8, 6, 10],
+          lookAt: [0, 0, 0]
+        },
+        animation: {
+          rotate: false,
+          speed: 0.008,
+          axis: "y"
         }
-        return [
-          Math.max(-8, Math.min(8, parseFloat(point[0]) || 0)),
-          Math.max(-8, Math.min(8, parseFloat(point[1]) || 0)),
-          Math.max(-8, Math.min(8, parseFloat(point[2]) || 0))
-        ];
-      });
+      };
+    }
 
-      // Ensure required properties with defaults
-      line.color = line.color || '#4d9fff';
-      line.opacity = Math.max(0.1, Math.min(1, parseFloat(line.opacity) || 0.7));
-      line.lineWidth = Math.max(0.1, Math.min(5, parseFloat(line.lineWidth) || 1));
-    });
+    // Validate and sanitize the data
+    if (!artData.lines || !Array.isArray(artData.lines)) {
+      artData.lines = [];
+    }
+
+    // Ensure each line has valid structure
+    artData.lines = artData.lines.filter(line => {
+      return line.points && Array.isArray(line.points) && line.points.length >= 2;
+    }).map(line => ({
+      points: line.points.map(point => {
+        if (Array.isArray(point) && point.length >= 3) {
+          return [
+            Math.max(-20, Math.min(20, Number(point[0]) || 0)),
+            Math.max(-20, Math.min(20, Number(point[1]) || 0)),
+            Math.max(-20, Math.min(20, Number(point[2]) || 0))
+          ];
+        }
+        return [0, 0, 0];
+      }),
+      color: line.color || "#509EF0",
+      opacity: Math.max(0.1, Math.min(1.0, Number(line.opacity) || 0.7)),
+      lineWidth: Math.max(1, Math.min(5, Number(line.lineWidth) || 1))
+    }));
+
+    // Ensure camera settings are valid
+    if (!artData.camera) artData.camera = {};
+    if (!artData.camera.position || !Array.isArray(artData.camera.position)) {
+      artData.camera.position = [8, 6, 10];
+    }
+    if (!artData.camera.lookAt || !Array.isArray(artData.camera.lookAt)) {
+      artData.camera.lookAt = [0, 0, 0];
+    }
+
+    // Ensure animation settings are valid
+    if (!artData.animation) artData.animation = {};
+    artData.animation.rotate = Boolean(artData.animation.rotate);
+    artData.animation.speed = Math.max(0.001, Math.min(0.1, Number(artData.animation.speed) || 0.008));
+    artData.animation.axis = ['x', 'y', 'z', 'all'].includes(artData.animation.axis) ? artData.animation.axis : 'y';
 
     return {
       statusCode: 200,
-      headers: { 
+      headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(params)
+      body: JSON.stringify(artData)
     };
-    
+
   } catch (error) {
-    console.error('Function error:', error);
-    
+    console.error('Generation error:', error);
     return {
       statusCode: 500,
-      headers: { 
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ 
-        error: error.message,
-        timestamp: new Date().toISOString()
+        error: `Generation failed: ${error.message}`,
+        fallback: {
+          title: "Fallback Visualization",
+          description: "Simple geometric pattern",
+          lines: [
+            {
+              points: [[-3, -3, 0], [3, 3, 0]],
+              color: "#509EF0",
+              opacity: 0.7,
+              lineWidth: 1
+            },
+            {
+              points: [[-3, 3, 0], [3, -3, 0]],
+              color: "#509EF0", 
+              opacity: 0.7,
+              lineWidth: 1
+            }
+          ],
+          camera: {
+            position: [8, 6, 10],
+            lookAt: [0, 0, 0]
+          },
+          animation: {
+            rotate: false,
+            speed: 0.008,
+            axis: "y"
+          }
+        }
       })
     };
   }
