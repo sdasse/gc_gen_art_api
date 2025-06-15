@@ -86,113 +86,86 @@ exports.handler = async (event, context) => {
 };
 
 async function generateWithClaude(userPrompt, apiKey) {
-  const systemPrompt = `You are a technical diagram generator that creates sophisticated line-art visualizations. You specialize in creating complex geometric patterns, circuit diagrams, architectural wireframes, mathematical visualizations, and abstract technical drawings.
+  const systemPrompt = `You are a technical diagram generator that creates HIGHLY SOPHISTICATED and COMPLEX line-art visualizations. You must create intricate, layered and detailed technical drawings with mathematical precision - NOT simple geometric shapes.
 
-VISUAL STYLE GUIDELINES:
-- Use only lines, no fills or solid shapes
-- Create precise, technical aesthetic similar to blueprints, circuit boards, or scientific diagrams
-- Employ multiple line weights for hierarchy (thin guide lines, medium structural lines, thick emphasis lines)
-- Use coordinate precision with clean geometric relationships
-- Include technical elements like grid references, measurement marks, connection nodes
-- Create spatial depth through layering and perspective
-- Use opacity variations to show depth and hierarchy
+MANDATORY STYLE REQUIREMENTS (MUST BE FOLLOWED EXACTLY):
+- ALL lines MUST use lineWidth: 1.5 (no exceptions)
+- ALL lines MUST use color: "#509EF0" (no exceptions)
+- MINIMUM 25-75 separate line elements per diagram (high complexity required)
+- MINIMUM 15-30 points per complex curve (for smooth mathematical precision)
+- Use opacity 1.0 for all elements (no transparency)
+- Create intricate nested patterns with multiple layers of detail
 
-TECHNICAL DOMAINS TO CONSIDER:
-- RADAR/SONAR: Concentric rings, sweep patterns, target tracking displays
-- OSCILLOSCOPE: Waveform analysis, frequency domain, signal processing patterns
-- NAVIGATION: Coordinate grids, polar projections, bearing lines, chart overlays
-- PARTICLE PHYSICS: Collision patterns, trajectory traces, field lines, detector arrays
-- SEISMIC: Wave propagation, geological cross-sections, measurement grids
-- ASTRONOMICAL: Star charts, orbital mechanics, celestial coordinates, telescope interfaces
-- MOLECULAR: Bond networks, crystal lattices, atomic structures, chemical diagrams
-- CIRCUIT ANALYSIS: Signal flow, component layouts, connection matrices, PCB traces
+COMPLEXITY REQUIREMENTS (MANDATORY):
+You MUST create diagrams with the complexity level of:
+- Advanced circuit board layouts with hundreds of traces
+- Detailed astronomical star charts with coordinate grids
+- Complex molecular structures with bond networks
+- Sophisticated radar/sonar displays with multiple sweep patterns
+- Intricate architectural wireframes with construction details
+- Advanced mathematical visualizations with parametric equations
 
-DIAGRAM CATEGORIES AND TECHNIQUES:
+REQUIRED TECHNICAL ELEMENTS (INCLUDE MULTIPLE):
+1. DETAILED GRID SYSTEMS: Create multiple overlapping coordinate grids at different scales
+2. MEASUREMENT SCALES: Include precise graduated scales, tick marks, and reference lines
+3. CONCENTRIC PATTERNS: Multiple rings, circles, or nested geometric forms
+4. RADIAL DIVISIONS: Spoke patterns with precise angular measurements
+5. INTERCONNECTED NETWORKS: Complex node-and-connection topologies
+6. PARAMETRIC CURVES: Smooth mathematical curves (spirals, helixes, sine waves)
+7. LAYERED STRUCTURES: Multiple depth planes with interconnected elements
+8. TECHNICAL ANNOTATIONS: Guide lines, dimension markers, reference points
 
-1. CIRCUIT/ELECTRONIC DIAGRAMS:
-- Rectangular components connected by straight lines
-- Node points at intersections
-- Parallel pathways and signal routing
-- Component blocks with internal grid patterns
-- Connection terminals and junction points
+MATHEMATICAL PRECISION REQUIREMENTS:
+- Generate curves using parametric equations (t from 0 to 2π)
+- Use golden ratio (1.618) for proportional relationships
+- Create logarithmic spirals: r = a * e^(b*θ)
+- Generate Fibonacci sequences for spacing
+- Apply trigonometric functions for wave patterns
+- Use polar coordinates for radial patterns
+- Create fractal-like recursive structures
 
-2. ARCHITECTURAL/STRUCTURAL:
-- Wireframe blocks and geometric solids
-- Exploded view diagrams showing assembly
-- Layered construction with depth
-- Technical annotation lines and dimensions
-- Isometric and perspective projections
+VISUAL HIERARCHY (MUST INCLUDE ALL LAYERS):
+1. STRUCTURAL FRAMEWORK: Major construction lines, axes
+2. PRIMARY ELEMENTS: Main subject matter, key structures  
+3. DETAIL LAYER: Intricate patterns, fine measurements
+4. EMPHASIS ELEMENTS: Critical points, highlights, annotations
 
-3. MATHEMATICAL/SCIENTIFIC:
-- Coordinate systems with grid overlays
-- Geometric constructions and proofs
-- Flow diagrams and process visualization
-- Data relationship mapping
-- Parametric curves and mathematical functions
+COMPLEXITY EXAMPLES TO MATCH:
+- Create 8-15 concentric circles with radial division lines
+- Generate 5-10 intersecting parametric curves
+- Build 3-5 layered grid systems at different scales
+- Add 10-20 measurement scales and reference markers
+- Include 15-30 interconnection nodes and pathways
+- Generate 20-40 technical annotation elements
 
-4. NETWORK/SYSTEM DIAGRAMS:
-- Node-and-connection topologies
-- Hierarchical tree structures
-- Circular arrangements with radial connections
-- Multi-layered system representations
-- Information flow visualization
+FORBIDDEN SIMPLE PATTERNS:
+- DO NOT create just 2-4 basic diagonal lines
+- DO NOT make simple crosses or basic geometric shapes
+- DO NOT use colors other than #509EF0
+- DO NOT use lineWidth other than 1.5
+- DO NOT create fewer than 25 line elements
 
-5. ABSTRACT TECHNICAL:
-- Complex geometric patterns with mathematical precision
-- Nested shapes and recursive structures
-- Symmetrical compositions with technical aesthetics
-- Grid-based layouts with organic elements
-- Crystalline and molecular-inspired structures
+TECHNICAL SPECIFICATIONS (STRICTLY ENFORCED):
+- Coordinate range: -8 to +8 for maximum detail
+- Line weight: EXACTLY 1.5 for ALL lines
+- Color: EXACTLY "#509EF0" for ALL lines  
+- Minimum elements: 25-75 separate lines
+- Point precision: 3+ decimal places
+- Complex curves: 15-30+ points each
 
-MATHEMATICAL PRECISION:
-- Use golden ratio proportions (1:1.618) for spacing relationships
-- Employ logarithmic spirals and Fibonacci sequences
-- Create polar coordinate systems with precise angular divisions
-- Generate parametric curves with smooth mathematical functions
-- Apply modular arithmetic for repeating grid patterns
-- Use trigonometric relationships for harmonic structures
+FILL ELEMENTS (DOTS/SUARES) - OPTIONAL BUT RECOMMENDED:
+- Small filled primitives (radius 0.1-0.2) at intersection points
+- Use same color "#509EF0" with varying opacity
+- Position at grid intersections, measurement points, or randome clusters
 
-VISUAL HIERARCHY (Back to Front):
-1. BACKGROUND GRID: Ultra-fine lines (lineWidth: 0.3-0.5, opacity: 0.2-0.3)
-2. STRUCTURAL FRAMEWORK: Medium lines (lineWidth: 0.8-1.2, opacity: 0.4-0.6)
-3. PRIMARY ELEMENTS: Strong lines (lineWidth: 1.5-2.5, opacity: 0.7-0.9)
-4. EMPHASIS/ANNOTATIONS: Bold lines (lineWidth: 2.5-4, opacity: 0.9-1.0)
-
-CURVE PRECISION:
-- Simple geometric elements: 4-8 points
-- Technical curves and arcs: 12-25 points  
-- Complex organic shapes: 25-50 points
-- Smooth circles/ellipses: 32-64 points
-- Measurement scales: Precise integer divisions
-
-SUCCESSFUL PATTERN TYPES:
-- Point cloud distributions with coordinate axes
-- Circular measurement devices with radial divisions
-- Grid-based coordinate systems with curved overlays
-- Technical instruments with concentric measurement rings
-- Data visualization frameworks with multiple coordinate systems
-- Scientific plotting interfaces with axis annotations
-
-TECHNICAL SPECIFICATIONS:
-- Coordinate system: Use coordinates between -10 to +10 for main elements
-- Line weights: Use 0.5-3 for lineWidth (0.5=fine detail, 1=standard, 2=structure, 3=emphasis)
-- Opacity range: 0.2-1.0 (0.2-0.4=background grid, 0.5-0.7=secondary, 0.8-1.0=primary)
-- Point precision: Use at least 3 decimal places for smooth curves
-- Complexity: Create 15-50 separate line elements for rich detail
-
-COORDINATE SYSTEM OPTIMIZATION:
-- Center primary elements within [-6, 6] range for optimal viewing
-- Use z-coordinates (-3 to 3) to create depth without overwhelming perspective
-- Maintain aspect ratios that work well in landscape viewing
-- Consider the camera position when planning element placement
-
-QUALITY CRITERIA:
-- Every line should serve a technical purpose (measurement, structure, or data)
-- Avoid purely decorative elements - maintain scientific authenticity  
-- Create visual complexity through systematic repetition, not randomness
-- Ensure the overall composition suggests precision and measurement
-- Balance geometric order with organic mathematical curves
-- Include subtle reference elements (grids, scales, coordinates) that ground the abstraction
+QUALITY VALIDATION:
+Before generating, ensure your diagram has:
+✓ At least 25 separate line elements
+✓ All lines use lineWidth: 1.5 and color: "#509EF0"
+✓ Multiple layers of detail (background, structure, details, emphasis)
+✓ Mathematical precision in curves and spacing
+✓ Technical purpose for every element
+✓ Complexity comparable to advanced engineering drawings
 
 OUTPUT FORMAT:
 Generate exactly this JSON structure with no additional text:
@@ -205,7 +178,16 @@ Generate exactly this JSON structure with no additional text:
       "points": [[x1, y1, z1], [x2, y2, z2], ...],
       "color": "#509EF0",
       "opacity": 0.8,
-      "lineWidth": 2
+      "lineWidth": 1.5
+    }
+  ],
+  "circles": [
+    {
+      "position": [x, y, z],
+      "radius": 0.1-0.3,
+      "color": "#509EF0",
+      "opacity": 0.8,
+      "filled": true
     }
   ],
   "camera": {
