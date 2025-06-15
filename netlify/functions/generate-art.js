@@ -105,18 +105,18 @@ You MUST create diagrams with the complexity level of:
 - Intricate architectural wireframes with construction details
 - Advanced mathematical visualizations with parametric equations
 
-REQUIRED TECHNICAL ELEMENTS (INCLUDE MULTIPLE):
-1. DETAILED GRID SYSTEMS: Create multiple overlapping coordinate grids at different scales
-2. MEASUREMENT SCALES: Include precise graduated scales, tick marks, and reference lines
-3. CONCENTRIC PATTERNS: Multiple rings, circles, or nested geometric forms
-4. RADIAL DIVISIONS: Spoke patterns with precise angular measurements
-5. INTERCONNECTED NETWORKS: Complex node-and-connection topologies
-6. PARAMETRIC CURVES: Smooth mathematical curves (spirals, helixes, sine waves)
-7. LAYERED STRUCTURES: Multiple depth planes with interconnected elements
-8. TECHNICAL ANNOTATIONS: Guide lines, dimension markers, reference points
+RECOMMENDED TECHNICAL ELEMENTS (INCLUDE MULTIPLE):
+1. MEASUREMENT SCALES: Include precise graduated scales, tick marks, and reference lines
+2. CONCENTRIC PATTERNS: Multiple rings, circles, or nested geometric forms
+3. RADIAL DIVISIONS: Spoke patterns with precise angular measurements
+4. INTERCONNECTED NETWORKS: Complex node-and-connection topologies
+5. PARAMETRIC CURVES: Smooth mathematical curves (spirals, helixes, sine waves)
+6. LAYERED STRUCTURES: Multiple depth planes with interconnected elements
+7. TECHNICAL ANNOTATIONS: Guide lines, dimension markers, reference points
+8. GEOMETRIC CONSTRUCTIONS: Complex polygons, tessellations, fractal patterns
 
 MATHEMATICAL PRECISION REQUIREMENTS:
-- Generate curves using parametric equations (t from 0 to 2π)
+- Generate curves using parametric equations (t from 0 to 2π)  
 - Use golden ratio (1.618) for proportional relationships
 - Create logarithmic spirals: r = a * e^(b*θ)
 - Generate Fibonacci sequences for spacing
@@ -149,14 +149,15 @@ TECHNICAL SPECIFICATIONS (STRICTLY ENFORCED):
 - Coordinate range: -8 to +8 for maximum detail
 - Line weight: EXACTLY 1.5 for ALL lines
 - Color: EXACTLY "#509EF0" for ALL lines  
+- Opacity: EXACTLY 1 for ALL elements
 - Minimum elements: 25-75 separate lines
 - Point precision: 3+ decimal places
 - Complex curves: 15-30+ points each
 
-FILL ELEMENTS (DOTS/SUARES) - OPTIONAL BUT RECOMMENDED:
-- Small filled primitives (radius 0.1-0.2) at intersection points
-- Use same color "#509EF0" with varying opacity
-- Position at grid intersections, measurement points, or randome clusters
+FILL ELEMENTS (DOTS/PRIMITIVES) - OPTIONAL BUT RECOMMENDED:
+- Small filled primitive shapes (radius 0.1-0.2) at intersection points
+- Use same color "#509EF0" with opacity 1
+- Position at grid intersections, measurement points, or node clusters
 
 QUALITY VALIDATION:
 Before generating, ensure your diagram has:
@@ -177,7 +178,7 @@ Generate exactly this JSON structure with no additional text:
     {
       "points": [[x1, y1, z1], [x2, y2, z2], ...],
       "color": "#509EF0",
-      "opacity": 0.8,
+      "opacity": 1,
       "lineWidth": 1.5
     }
   ],
@@ -186,7 +187,7 @@ Generate exactly this JSON structure with no additional text:
       "position": [x, y, z],
       "radius": 0.1-0.3,
       "color": "#509EF0",
-      "opacity": 0.8,
+      "opacity": 1,
       "filled": true
     }
   ],
