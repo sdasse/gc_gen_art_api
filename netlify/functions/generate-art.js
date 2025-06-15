@@ -15,8 +15,8 @@ exports.handler = async (event, context) => {
 
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
-    return { 
-      statusCode: 405, 
+    return {
+      statusCode: 405,
       headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: 'Method Not Allowed' })
     };
@@ -24,7 +24,7 @@ exports.handler = async (event, context) => {
 
   try {
     let prompt = '';
-    
+
     // Parse request body
     try {
       const body = JSON.parse(event.body || '{}');
@@ -36,7 +36,7 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ error: 'Invalid JSON in request body' })
       };
     }
-    
+
     if (!prompt || prompt.trim().length === 0) {
       return {
         statusCode: 400,
@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
 
     // Check if Claude API key is available
     const claudeApiKey = process.env.ANTHROPIC_API_KEY;
-    
+
     if (claudeApiKey) {
       // Use Claude to generate sophisticated technical diagrams
       const artData = await generateWithClaude(prompt.trim(), claudeApiKey);
@@ -77,11 +77,11 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Generation error:', error);
-    
+
     // Always return a fallback response
     return {
       statusCode: 200,
-      headers: { 
+      headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json'
       },
@@ -101,6 +101,16 @@ VISUAL STYLE GUIDELINES:
 - Include technical elements like grid references, measurement marks, connection nodes
 - Create spatial depth through layering and perspective
 - Use opacity variations to show depth and hierarchy
+
+TECHNICAL DOMAINS TO CONSIDER:
+- RADAR/SONAR: Concentric rings, sweep patterns, target tracking displays
+- OSCILLOSCOPE: Waveform analysis, frequency domain, signal processing patterns
+- NAVIGATION: Coordinate grids, polar projections, bearing lines, chart overlays
+- PARTICLE PHYSICS: Collision patterns, trajectory traces, field lines, detector arrays
+- SEISMIC: Wave propagation, geological cross-sections, measurement grids
+- ASTRONOMICAL: Star charts, orbital mechanics, celestial coordinates, telescope interfaces
+- MOLECULAR: Bond networks, crystal lattices, atomic structures, chemical diagrams
+- CIRCUIT ANALYSIS: Signal flow, component layouts, connection matrices, PCB traces
 
 DIAGRAM CATEGORIES AND TECHNIQUES:
 
@@ -139,13 +149,55 @@ DIAGRAM CATEGORIES AND TECHNIQUES:
 - Grid-based layouts with organic elements
 - Crystalline and molecular-inspired structures
 
+MATHEMATICAL PRECISION:
+- Use golden ratio proportions (1:1.618) for spacing relationships
+- Employ logarithmic spirals and Fibonacci sequences
+- Create polar coordinate systems with precise angular divisions
+- Generate parametric curves with smooth mathematical functions
+- Apply modular arithmetic for repeating grid patterns
+- Use trigonometric relationships for harmonic structures
+
+VISUAL HIERARCHY (Back to Front):
+1. BACKGROUND GRID: Ultra-fine lines (lineWidth: 0.3-0.5, opacity: 0.2-0.3)
+2. STRUCTURAL FRAMEWORK: Medium lines (lineWidth: 0.8-1.2, opacity: 0.4-0.6)
+3. PRIMARY ELEMENTS: Strong lines (lineWidth: 1.5-2.5, opacity: 0.7-0.9)
+4. EMPHASIS/ANNOTATIONS: Bold lines (lineWidth: 2.5-4, opacity: 0.9-1.0)
+
+CURVE PRECISION:
+- Simple geometric elements: 4-8 points
+- Technical curves and arcs: 12-25 points  
+- Complex organic shapes: 25-50 points
+- Smooth circles/ellipses: 32-64 points
+- Measurement scales: Precise integer divisions
+
+SUCCESSFUL PATTERN TYPES:
+- Point cloud distributions with coordinate axes
+- Circular measurement devices with radial divisions
+- Grid-based coordinate systems with curved overlays
+- Technical instruments with concentric measurement rings
+- Data visualization frameworks with multiple coordinate systems
+- Scientific plotting interfaces with axis annotations
+
 TECHNICAL SPECIFICATIONS:
 - Coordinate system: Use coordinates between -10 to +10 for main elements
 - Line weights: Use 0.5-3 for lineWidth (0.5=fine detail, 1=standard, 2=structure, 3=emphasis)
 - Opacity range: 0.2-1.0 (0.2-0.4=background grid, 0.5-0.7=secondary, 0.8-1.0=primary)
-- Color palette: Use technical blues (#509EF0, #70B0F0, #3080D0) with occasional accent colors
 - Point precision: Use at least 3 decimal places for smooth curves
 - Complexity: Create 15-50 separate line elements for rich detail
+
+COORDINATE SYSTEM OPTIMIZATION:
+- Center primary elements within [-6, 6] range for optimal viewing
+- Use z-coordinates (-3 to 3) to create depth without overwhelming perspective
+- Maintain aspect ratios that work well in landscape viewing
+- Consider the camera position when planning element placement
+
+QUALITY CRITERIA:
+- Every line should serve a technical purpose (measurement, structure, or data)
+- Avoid purely decorative elements - maintain scientific authenticity  
+- Create visual complexity through systematic repetition, not randomness
+- Ensure the overall composition suggests precision and measurement
+- Balance geometric order with organic mathematical curves
+- Include subtle reference elements (grids, scales, coordinates) that ground the abstraction
 
 OUTPUT FORMAT:
 Generate exactly this JSON structure with no additional text:
@@ -173,15 +225,15 @@ Generate exactly this JSON structure with no additional text:
 }
 
 DESIGN PROCESS:
-1. Analyze the user's concept and determine the most appropriate diagram category
+1. Analyze the user's concept and determine the most appropriate technical domain
 2. Consider the underlying structure and technical relationships
-3. Plan the composition with primary, secondary, and tertiary elements
-4. Create detailed coordinate calculations for precise geometry
-5. Apply visual hierarchy through line weight and opacity
-6. Add technical details like grids, annotations, or measurement marks
-7. Set appropriate camera position and animation to enhance the technical aesthetic
+3. Plan the composition with primary, secondary, and tertiary elements following visual hierarchy
+4. Create detailed coordinate calculations for precise geometry using mathematical relationships
+5. Apply visual hierarchy through systematic line weight and opacity assignments
+6. Add technical details like grids, annotations, or measurement marks that serve the concept
+7. Set appropriate camera position to enhance the technical aesthetic
 
-Remember: Create sophisticated, technically precise diagrams that could belong in an engineering textbook, scientific paper, or architectural blueprint. Avoid simple geometric shapes - instead create complex, meaningful technical visualizations.`;
+Remember: Create sophisticated, technically precise diagrams that could belong in an engineering textbook, scientific paper, or architectural blueprint. Avoid simple geometric shapes - instead create complex, meaningful technical visualizations that demonstrate systematic precision over random complexity.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -212,22 +264,22 @@ Generate a sophisticated line-art visualization that captures the essence of thi
 
     const claudeResult = await response.json();
     const generatedText = claudeResult.content[0].text;
-    
+
     // Extract JSON from Claude's response
     const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const artData = JSON.parse(jsonMatch[0]);
-      
+
       // Ensure required fields are present
       if (!artData.lines || !Array.isArray(artData.lines)) {
         throw new Error('Invalid response structure from Claude');
       }
-      
+
       // Validate and sanitize the data
-      artData.lines = artData.lines.filter(line => 
+      artData.lines = artData.lines.filter(line =>
         line.points && Array.isArray(line.points) && line.points.length >= 2
       );
-      
+
       // Set defaults if missing
       if (!artData.camera) {
         artData.camera = { position: [0, 0, 12], lookAt: [0, 0, 0] };
@@ -235,12 +287,12 @@ Generate a sophisticated line-art visualization that captures the essence of thi
       if (!artData.animation) {
         artData.animation = { rotate: false, speed: 0.008, axis: "z" };
       }
-      
+
       return artData;
     } else {
       throw new Error('Could not parse JSON from Claude response');
     }
-    
+
   } catch (error) {
     console.error('Claude API error:', error);
     // Fallback to pattern matching
@@ -251,74 +303,74 @@ Generate a sophisticated line-art visualization that captures the essence of thi
 // Keep existing pattern matching system as fallback
 function generateArtFromPrompt(prompt) {
   const lowerPrompt = prompt.toLowerCase();
-  
+
   // Circuit patterns for technical terms
   if (lowerPrompt.includes('circuit') || lowerPrompt.includes('electronic') || lowerPrompt.includes('system') || lowerPrompt.includes('network')) {
     return generateCircuitPattern(prompt);
   }
-  
+
   // Architectural patterns
   if (lowerPrompt.includes('building') || lowerPrompt.includes('structure') || lowerPrompt.includes('architecture') || lowerPrompt.includes('blueprint')) {
     return generateArchitecturalPattern(prompt);
   }
-  
+
   // Circle patterns
   if (lowerPrompt.includes('circle') || lowerPrompt.includes('ring') || lowerPrompt.includes('round')) {
     return generateCirclePattern(prompt);
   }
-  
+
   // Square/rectangle patterns
   if (lowerPrompt.includes('square') || lowerPrompt.includes('rectangle') || lowerPrompt.includes('box') || lowerPrompt.includes('cube')) {
     return generateSquarePattern(prompt);
   }
-  
+
   // Wave patterns
   if (lowerPrompt.includes('wave') || lowerPrompt.includes('sine') || lowerPrompt.includes('oscilloscope') || lowerPrompt.includes('frequency')) {
     return generateWavePattern(prompt);
   }
-  
+
   // Grid patterns
   if (lowerPrompt.includes('grid') || lowerPrompt.includes('mesh') || lowerPrompt.includes('lattice')) {
     return generateGridPattern(prompt);
   }
-  
+
   // Spiral patterns
   if (lowerPrompt.includes('spiral') || lowerPrompt.includes('helix') || lowerPrompt.includes('twist') || lowerPrompt.includes('coil')) {
     return generateSpiralPattern(prompt);
   }
-  
+
   // Geometric shapes
   if (lowerPrompt.includes('triangle') || lowerPrompt.includes('pyramid')) {
     return generateTrianglePattern(prompt);
   }
-  
+
   // Torus/donut patterns
   if (lowerPrompt.includes('torus') || lowerPrompt.includes('donut') || lowerPrompt.includes('doughnut')) {
     return generateTorusPattern(prompt);
   }
-  
+
   // Star patterns
   if (lowerPrompt.includes('star') || lowerPrompt.includes('asterisk') || lowerPrompt.includes('radial')) {
     return generateStarPattern(prompt);
   }
-  
+
   // Organic/flowing patterns
   if (lowerPrompt.includes('organic') || lowerPrompt.includes('flow') || lowerPrompt.includes('fluid') || lowerPrompt.includes('curve')) {
     return generateOrganicPattern(prompt);
   }
-  
+
   // Random/abstract patterns based on length and characters
   if (lowerPrompt.includes('random') || lowerPrompt.includes('abstract') || lowerPrompt.includes('chaos')) {
     return generateRandomPattern(prompt);
   }
-  
+
   // Generate dynamic pattern based on prompt characteristics
   return generateDynamicPattern(prompt);
 }
 
 function generateCircuitPattern(prompt) {
   const lines = [];
-  
+
   // Main circuit board outline
   lines.push({
     points: [[-8, -6, 0], [8, -6, 0], [8, 6, 0], [-8, 6, 0], [-8, -6, 0]],
@@ -326,7 +378,7 @@ function generateCircuitPattern(prompt) {
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Circuit components (rectangular blocks)
   const components = [
     { x: -4, y: 2, w: 2, h: 1 },
@@ -335,33 +387,33 @@ function generateCircuitPattern(prompt) {
     { x: -2, y: -2, w: 3, h: 1.5 },
     { x: 3, y: -3, w: 1.8, h: 1 }
   ];
-  
+
   components.forEach(comp => {
     lines.push({
       points: [
-        [comp.x - comp.w/2, comp.y - comp.h/2, 0],
-        [comp.x + comp.w/2, comp.y - comp.h/2, 0],
-        [comp.x + comp.w/2, comp.y + comp.h/2, 0],
-        [comp.x - comp.w/2, comp.y + comp.h/2, 0],
-        [comp.x - comp.w/2, comp.y - comp.h/2, 0]
+        [comp.x - comp.w / 2, comp.y - comp.h / 2, 0],
+        [comp.x + comp.w / 2, comp.y - comp.h / 2, 0],
+        [comp.x + comp.w / 2, comp.y + comp.h / 2, 0],
+        [comp.x - comp.w / 2, comp.y + comp.h / 2, 0],
+        [comp.x - comp.w / 2, comp.y - comp.h / 2, 0]
       ],
       color: "#70B0F0",
       opacity: 0.9,
       lineWidth: 1.5
     });
-    
+
     // Internal grid pattern for each component
     for (let i = 1; i < 4; i++) {
-      const x = comp.x - comp.w/2 + (i/4) * comp.w;
+      const x = comp.x - comp.w / 2 + (i / 4) * comp.w;
       lines.push({
-        points: [[x, comp.y - comp.h/2, 0], [x, comp.y + comp.h/2, 0]],
+        points: [[x, comp.y - comp.h / 2, 0], [x, comp.y + comp.h / 2, 0]],
         color: "#3080D0",
         opacity: 0.6,
         lineWidth: 0.5
       });
     }
   });
-  
+
   // Connection traces
   const traces = [
     [[-4, 2, 0], [-2, 0, 0], [0, 3, 0]],
@@ -369,7 +421,7 @@ function generateCircuitPattern(prompt) {
     [[-2, -2, 0], [1, -2, 0], [3, -3, 0]],
     [[-6, 0, 0], [-4, 2, 0], [-2, -2, 0]]
   ];
-  
+
   traces.forEach(trace => {
     lines.push({
       points: trace,
@@ -378,7 +430,7 @@ function generateCircuitPattern(prompt) {
       lineWidth: 1
     });
   });
-  
+
   // Connection nodes
   const nodes = [[-4, 2], [0, 3], [4, 1], [-2, -2], [3, -3], [-2, 0], [2, 1], [1, -2]];
   nodes.forEach(([x, y]) => {
@@ -394,7 +446,7 @@ function generateCircuitPattern(prompt) {
       lineWidth: 2
     });
   });
-  
+
   return {
     title: `Circuit Diagram: ${prompt}`,
     description: "Electronic circuit board with components and traces",
@@ -406,7 +458,7 @@ function generateCircuitPattern(prompt) {
 
 function generateArchitecturalPattern(prompt) {
   const lines = [];
-  
+
   // Building blocks in isometric view
   const blocks = [
     { x: -2, y: 0, z: 0, w: 3, h: 2, d: 2 },
@@ -414,20 +466,20 @@ function generateArchitecturalPattern(prompt) {
     { x: 0, y: -2, z: -1, w: 4, h: 1, d: 3 },
     { x: -4, y: 2, z: 0.5, w: 1.5, h: 2.5, d: 1 }
   ];
-  
+
   blocks.forEach(block => {
     // Create wireframe box
     const vertices = [
-      [block.x - block.w/2, block.y - block.h/2, block.z - block.d/2],
-      [block.x + block.w/2, block.y - block.h/2, block.z - block.d/2],
-      [block.x + block.w/2, block.y + block.h/2, block.z - block.d/2],
-      [block.x - block.w/2, block.y + block.h/2, block.z - block.d/2],
-      [block.x - block.w/2, block.y - block.h/2, block.z + block.d/2],
-      [block.x + block.w/2, block.y - block.h/2, block.z + block.d/2],
-      [block.x + block.w/2, block.y + block.h/2, block.z + block.d/2],
-      [block.x - block.w/2, block.y + block.h/2, block.z + block.d/2]
+      [block.x - block.w / 2, block.y - block.h / 2, block.z - block.d / 2],
+      [block.x + block.w / 2, block.y - block.h / 2, block.z - block.d / 2],
+      [block.x + block.w / 2, block.y + block.h / 2, block.z - block.d / 2],
+      [block.x - block.w / 2, block.y + block.h / 2, block.z - block.d / 2],
+      [block.x - block.w / 2, block.y - block.h / 2, block.z + block.d / 2],
+      [block.x + block.w / 2, block.y - block.h / 2, block.z + block.d / 2],
+      [block.x + block.w / 2, block.y + block.h / 2, block.z + block.d / 2],
+      [block.x - block.w / 2, block.y + block.h / 2, block.z + block.d / 2]
     ];
-    
+
     // Bottom face
     lines.push({
       points: [vertices[0], vertices[1], vertices[2], vertices[3], vertices[0]],
@@ -435,7 +487,7 @@ function generateArchitecturalPattern(prompt) {
       opacity: 0.8,
       lineWidth: 1.5
     });
-    
+
     // Top face
     lines.push({
       points: [vertices[4], vertices[5], vertices[6], vertices[7], vertices[4]],
@@ -443,7 +495,7 @@ function generateArchitecturalPattern(prompt) {
       opacity: 0.8,
       lineWidth: 1.5
     });
-    
+
     // Vertical edges
     for (let i = 0; i < 4; i++) {
       lines.push({
@@ -454,7 +506,7 @@ function generateArchitecturalPattern(prompt) {
       });
     }
   });
-  
+
   // Construction grid
   for (let x = -8; x <= 8; x += 2) {
     lines.push({
@@ -472,7 +524,7 @@ function generateArchitecturalPattern(prompt) {
       lineWidth: 0.5
     });
   }
-  
+
   return {
     title: `Architectural Diagram: ${prompt}`,
     description: "Isometric architectural wireframe with construction grid",
@@ -487,7 +539,7 @@ function generateCirclePattern(prompt) {
   const lines = [];
   const radius = 4;
   const segments = 32;
-  
+
   // Main circle
   const circlePoints = [];
   for (let i = 0; i <= segments; i++) {
@@ -504,7 +556,7 @@ function generateCirclePattern(prompt) {
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Inner circles
   for (let r = 1; r <= 3; r++) {
     const innerPoints = [];
@@ -523,7 +575,7 @@ function generateCirclePattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   // Cross lines
   lines.push({
     points: [[-radius, 0, 0], [radius, 0, 0]],
@@ -537,7 +589,7 @@ function generateCirclePattern(prompt) {
     opacity: 0.7,
     lineWidth: 1
   });
-  
+
   return {
     title: `Circle Pattern: ${prompt}`,
     description: "Concentric circles with cross-hair guides",
@@ -556,7 +608,7 @@ function generateCirclePattern(prompt) {
 
 function generateSquarePattern(prompt) {
   const lines = [];
-  
+
   // Outer square
   lines.push({
     points: [[-4, -4, 0], [4, -4, 0], [4, 4, 0], [-4, 4, 0], [-4, -4, 0]],
@@ -564,7 +616,7 @@ function generateSquarePattern(prompt) {
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Inner squares
   for (let size = 1; size <= 3; size++) {
     lines.push({
@@ -574,7 +626,7 @@ function generateSquarePattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   // Diagonal lines
   lines.push({
     points: [[-4, -4, 0], [4, 4, 0]],
@@ -588,7 +640,7 @@ function generateSquarePattern(prompt) {
     opacity: 0.5,
     lineWidth: 1
   });
-  
+
   return {
     title: `Square Pattern: ${prompt}`,
     description: "Nested squares with diagonal guides",
@@ -603,7 +655,7 @@ function generateWavePattern(prompt) {
   const amplitude = 3;
   const frequency = 2;
   const points = 100;
-  
+
   // Main wave
   const wavePoints = [];
   for (let i = 0; i < points; i++) {
@@ -617,7 +669,7 @@ function generateWavePattern(prompt) {
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Harmonic waves
   for (let harmonic = 2; harmonic <= 3; harmonic++) {
     const harmonicPoints = [];
@@ -633,7 +685,7 @@ function generateWavePattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   // Grid lines
   for (let i = -2; i <= 2; i++) {
     lines.push({
@@ -643,7 +695,7 @@ function generateWavePattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   return {
     title: `Wave Pattern: ${prompt}`,
     description: "Sine wave with harmonics and grid",
@@ -657,29 +709,29 @@ function generateGridPattern(prompt) {
   const lines = [];
   const size = 8;
   const divisions = 8;
-  
+
   // Horizontal lines
   for (let i = 0; i <= divisions; i++) {
     const y = (i / divisions - 0.5) * size;
     lines.push({
-      points: [[-size/2, y, 0], [size/2, y, 0]],
+      points: [[-size / 2, y, 0], [size / 2, y, 0]],
       color: "#509EF0",
       opacity: 0.7,
       lineWidth: 1
     });
   }
-  
+
   // Vertical lines
   for (let i = 0; i <= divisions; i++) {
     const x = (i / divisions - 0.5) * size;
     lines.push({
-      points: [[x, -size/2, 0], [x, size/2, 0]],
+      points: [[x, -size / 2, 0], [x, size / 2, 0]],
       color: "#509EF0",
       opacity: 0.7,
       lineWidth: 1
     });
   }
-  
+
   // Diagonal connections
   for (let i = 0; i < divisions; i++) {
     for (let j = 0; j < divisions; j++) {
@@ -697,7 +749,7 @@ function generateGridPattern(prompt) {
       }
     }
   }
-  
+
   return {
     title: `Grid Pattern: ${prompt}`,
     description: "Technical grid with diagonal connections",
@@ -712,7 +764,7 @@ function generateSpiralPattern(prompt) {
   const turns = 3;
   const points = 100;
   const maxRadius = 5;
-  
+
   // Main spiral
   const spiralPoints = [];
   for (let i = 0; i < points; i++) {
@@ -730,7 +782,7 @@ function generateSpiralPattern(prompt) {
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Counter spiral
   const counterSpiralPoints = [];
   for (let i = 0; i < points; i++) {
@@ -748,7 +800,7 @@ function generateSpiralPattern(prompt) {
     opacity: 0.6,
     lineWidth: 1
   });
-  
+
   // Radial lines
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
@@ -762,7 +814,7 @@ function generateSpiralPattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   return {
     title: `Spiral Pattern: ${prompt}`,
     description: "Double spiral with radial guides",
@@ -775,7 +827,7 @@ function generateSpiralPattern(prompt) {
 function generateTrianglePattern(prompt) {
   const lines = [];
   const size = 4;
-  
+
   // Main triangle
   lines.push({
     points: [
@@ -788,7 +840,7 @@ function generateTrianglePattern(prompt) {
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Inner triangles
   for (let scale = 0.3; scale < 1; scale += 0.3) {
     lines.push({
@@ -803,7 +855,7 @@ function generateTrianglePattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   return {
     title: `Triangle Pattern: ${prompt}`,
     description: "Nested triangular geometry",
@@ -818,13 +870,13 @@ function generateTorusPattern(prompt) {
   const majorRadius = 4;
   const minorRadius = 1.5;
   const segments = 24;
-  
+
   // Major circles
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
     const y = Math.sin(angle) * minorRadius;
     const radius = majorRadius + Math.cos(angle) * minorRadius;
-    
+
     const circlePoints = [];
     for (let j = 0; j <= segments; j++) {
       const theta = (j / segments) * Math.PI * 2;
@@ -841,13 +893,13 @@ function generateTorusPattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   // Minor circles
   for (let i = 0; i < 12; i++) {
     const mainAngle = (i / 12) * Math.PI * 2;
     const centerX = Math.cos(mainAngle) * majorRadius;
     const centerZ = Math.sin(mainAngle) * majorRadius;
-    
+
     const circlePoints = [];
     for (let j = 0; j <= segments; j++) {
       const angle = (j / segments) * Math.PI * 2;
@@ -864,7 +916,7 @@ function generateTorusPattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   return {
     title: `Torus Pattern: ${prompt}`,
     description: "Three-dimensional torus wireframe",
@@ -879,7 +931,7 @@ function generateStarPattern(prompt) {
   const outerRadius = 5;
   const innerRadius = 2;
   const points = 8;
-  
+
   // Star outline
   const starPoints = [];
   for (let i = 0; i <= points * 2; i++) {
@@ -892,14 +944,14 @@ function generateStarPattern(prompt) {
     ]);
   }
   starPoints.push(starPoints[0]); // Close the star
-  
+
   lines.push({
     points: starPoints,
     color: "#509EF0",
     opacity: 0.8,
     lineWidth: 2
   });
-  
+
   // Radial lines from center
   for (let i = 0; i < points; i++) {
     const angle = (i / points) * Math.PI * 2;
@@ -913,7 +965,7 @@ function generateStarPattern(prompt) {
       lineWidth: 1
     });
   }
-  
+
   return {
     title: `Star Pattern: ${prompt}`,
     description: "Radial star geometry",
@@ -926,12 +978,12 @@ function generateStarPattern(prompt) {
 function generateOrganicPattern(prompt) {
   const lines = [];
   const segments = 50;
-  
+
   // Flowing curves
   for (let curve = 0; curve < 4; curve++) {
     const points = [];
     const phase = curve * Math.PI * 0.5;
-    
+
     for (let i = 0; i < segments; i++) {
       const t = (i / (segments - 1)) * Math.PI * 4;
       const amplitude = 3 + Math.sin(t * 0.3 + phase) * 1;
@@ -941,7 +993,7 @@ function generateOrganicPattern(prompt) {
         Math.sin(t * 0.5 + phase) * 1.5
       ]);
     }
-    
+
     lines.push({
       points: points,
       color: `hsl(${200 + curve * 20}, 70%, 60%)`,
@@ -949,7 +1001,7 @@ function generateOrganicPattern(prompt) {
       lineWidth: 1 + curve * 0.2
     });
   }
-  
+
   return {
     title: `Organic Pattern: ${prompt}`,
     description: "Flowing organic curves",
@@ -962,17 +1014,17 @@ function generateOrganicPattern(prompt) {
 function generateRandomPattern(prompt) {
   const lines = [];
   const seed = prompt.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  
+
   // Pseudo-random based on prompt
   function seededRandom(i) {
     return ((seed + i * 1234567) % 9999) / 9999;
   }
-  
+
   // Generate random connected lines
   for (let i = 0; i < 15; i++) {
     const points = [];
     const numPoints = 3 + Math.floor(seededRandom(i) * 5);
-    
+
     for (let j = 0; j < numPoints; j++) {
       points.push([
         (seededRandom(i * 10 + j) - 0.5) * 8,
@@ -980,7 +1032,7 @@ function generateRandomPattern(prompt) {
         (seededRandom(i * 10 + j + 200) - 0.5) * 4
       ]);
     }
-    
+
     lines.push({
       points: points,
       color: `hsl(${seededRandom(i + 300) * 360}, 70%, 60%)`,
@@ -988,7 +1040,7 @@ function generateRandomPattern(prompt) {
       lineWidth: 1 + seededRandom(i + 500) * 2
     });
   }
-  
+
   return {
     title: `Random Pattern: ${prompt}`,
     description: "Pseudo-random geometric abstraction",
@@ -1002,16 +1054,16 @@ function generateDynamicPattern(prompt) {
   const lines = [];
   const hash = prompt.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
   const complexity = Math.min(prompt.length, 10);
-  
+
   // Create pattern based on prompt characteristics
   const baseRadius = 2 + (hash % 3);
   const numLayers = 2 + (complexity % 4);
-  
+
   for (let layer = 0; layer < numLayers; layer++) {
     const radius = baseRadius + layer * 1.5;
     const segments = 8 + layer * 4;
     const points = [];
-    
+
     for (let i = 0; i <= segments; i++) {
       const angle = (i / segments) * Math.PI * 2;
       const noise = Math.sin(angle * (hash % 7 + 3)) * 0.3;
@@ -1021,7 +1073,7 @@ function generateDynamicPattern(prompt) {
         layer * 0.5 - numLayers * 0.25
       ]);
     }
-    
+
     lines.push({
       points: points,
       color: `hsl(${(hash + layer * 50) % 360}, 70%, ${50 + layer * 10}%)`,
@@ -1029,7 +1081,7 @@ function generateDynamicPattern(prompt) {
       lineWidth: 2 - layer * 0.2
     });
   }
-  
+
   // Add connecting lines
   if (numLayers > 1) {
     for (let i = 0; i < 8; i++) {
@@ -1045,7 +1097,7 @@ function generateDynamicPattern(prompt) {
       });
     }
   }
-  
+
   return {
     title: `Dynamic Pattern: ${prompt}`,
     description: "Pattern generated from prompt characteristics",
@@ -1068,7 +1120,7 @@ function generateFallbackPattern(prompt) {
       },
       {
         points: [[-3, 3, 0], [3, -3, 0]],
-        color: "#509EF0", 
+        color: "#509EF0",
         opacity: 0.7,
         lineWidth: 1
       }
