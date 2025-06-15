@@ -1,0 +1,12 @@
+{
+  "name": "cg-art-generator-api",
+  "version": "1.0.0",
+  "description": "AI-powered line art generator API for Three.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {},
+  "author": "Scott Dasse",
+  "license": "ISC"
+}
