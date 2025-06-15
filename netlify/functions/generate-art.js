@@ -1,4 +1,5 @@
-// API handler for generating art using Claude
+
+// API handler for generating art using Claude with parameter-based approach
 exports.handler = async (event, context) => {
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
@@ -60,7 +61,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Use Claude to generate sophisticated technical diagrams
+    // Use Claude to generate parameters that will create complex diagrams
     const artData = await generateWithClaude(prompt.trim(), claudeApiKey);
     return {
       statusCode: 200,
@@ -86,44 +87,80 @@ exports.handler = async (event, context) => {
 };
 
 async function generateWithClaude(userPrompt, apiKey) {
-  const systemPrompt = `You are creating sophisticated technical line drawings. Look at these examples of the complexity I want:
+  const systemPrompt = `You are a technical diagram parameter generator. Instead of creating individual lines, generate PARAMETERS that will create complex technical diagrams.
 
-  EXAMPLE 1: Radar system with 50+ concentric circles, 200+ radial lines, dense grid overlays, measurement scales, and scattered connection points.
+For the prompt "${userPrompt}", return JSON with these parameters:
 
-  EXAMPLE 2: Circuit board with 80+ rectangular components, 150+ connection traces, node clusters, and coordinate grids.
+{
+  "title": "Brief title",
+  "description": "What this represents",
+  "pattern_type": "radar|circuit|network|grid|scatter|astronomical|molecular|architectural|mechanical",
+  "density": "high|very_high|extreme",
+  "layers": [
+    {
+      "type": "grid",
+      "spacing": 0.2,
+      "range": [-8, 8],
+      "opacity": 0.3
+    },
+    {
+      "type": "circles",
+      "center": [0, 0],
+      "count": 25,
+      "max_radius": 7,
+      "opacity": 0.6
+    },
+    {
+      "type": "radial_lines", 
+      "center": [0, 0],
+      "count": 72,
+      "length": 8,
+      "opacity": 0.4
+    },
+    {
+      "type": "scatter_points",
+      "count": 500,
+      "distribution": "exponential|random|clustered|spiral",
+      "bounds": [-6, 6],
+      "opacity": 0.8
+    },
+    {
+      "type": "connection_lines",
+      "node_count": 20,
+      "connection_probability": 0.3,
+      "opacity": 0.5
+    },
+    {
+      "type": "spiral",
+      "center": [0, 0],
+      "turns": 5,
+      "max_radius": 6,
+      "points_per_turn": 50,
+      "opacity": 0.7
+    },
+    {
+      "type": "wave_pattern",
+      "amplitude": 2,
+      "frequency": 3,
+      "length": 12,
+      "count": 8,
+      "opacity": 0.6
+    }
+  ],
+  "camera": {"position": [0, 0, 12], "lookAt": [0, 0, 0]}
+}
 
-  EXAMPLE 3: Scatter plot with 2000+ data points forming exponential curves, coordinate axes with tick marks, and annotation lines.
+Choose 3-6 appropriate layer types based on the prompt. Make it DENSE - use high counts and small spacing values. Think about what technical systems the prompt relates to, then choose layers that would create that type of technical diagram.
 
-  Your task: Create DENSE, LAYERED technical visualizations with similar complexity levels.
+PATTERN GUIDELINES:
+- Radar/tracking: circles + radial_lines + scatter_points
+- Circuit boards: grid + connection_lines + scatter_points
+- Molecular structures: connection_lines + circles + scatter_points
+- Astronomical: circles + spiral + scatter_points
+- Architectural: grid + connection_lines + wave_pattern
+- Mechanical: circles + radial_lines + grid
 
-  SIMPLE RULES:
-  1. Make it DENSE - use hundreds of lines, not dozens
-  2. Layer different systems on top of each other
-  3. Use coordinates between -8 and +8
-  4. All lines: color "#509EF0", opacity 1, lineWidth 1.5
-
-  PATTERN TYPES TO COMBINE:
-  - Dense grids (every 0.1 units)
-  - Concentric circles (every 0.2 radius)
-  - Radial lines (every 5 degrees)
-  - Scattered points/nodes
-  - Connection networks
-  - Measurement scales
-
-  FOR "${userPrompt}":
-  Think about what technical systems this relates to, then CREATE MULTIPLE OVERLAPPING LAYERS of those systems. Make it as dense and complex as a real technical schematic.
-
-  JSON FORMAT:
-  {
-    "title": "Brief title",
-    "description": "What you created", 
-    "lines": [
-      {"points": [[x,y,z], [x,y,z], ...], "color": "#509EF0", "opacity": 1, "lineWidth": 1.5}
-    ],
-    "camera": {"position": [0, 0, 12], "lookAt": [0, 0, 0]}
-  }
-
-  CREATE COMPLEXITY THROUGH QUANTITY AND LAYERING.`;
+Always use high density settings (small spacing, high counts) to ensure complex, technical-looking results.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -135,13 +172,11 @@ async function generateWithClaude(userPrompt, apiKey) {
       },
       body: JSON.stringify({
         model: 'claude-3-haiku-20240307',
-        max_tokens: 4000,
+        max_tokens: 2000,
         messages: [
           {
             role: 'user',
-            content: `Create a technical diagram for: ${userPrompt}
-
-Generate a sophisticated line-art visualization that captures the essence of this concept through technical drawing principles. Consider the underlying structure, relationships, and visual metaphors that would best represent this idea as a technical diagram.`
+            content: `Generate technical diagram parameters for: "${userPrompt}"`
           }
         ],
         system: systemPrompt
@@ -158,25 +193,10 @@ Generate a sophisticated line-art visualization that captures the essence of thi
     // Extract JSON from Claude's response
     const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const artData = JSON.parse(jsonMatch[0]);
+      const params = JSON.parse(jsonMatch[0]);
 
-      // Ensure required fields are present
-      if (!artData.lines || !Array.isArray(artData.lines)) {
-        throw new Error('Invalid response structure from Claude');
-      }
-
-      // Validate and sanitize the data
-      artData.lines = artData.lines.filter(line =>
-        line.points && Array.isArray(line.points) && line.points.length >= 2
-      );
-
-      // Set defaults if missing
-      if (!artData.camera) {
-        artData.camera = { position: [0, 0, 12], lookAt: [0, 0, 0] };
-      }
-      if (!artData.animation) {
-        artData.animation = { rotate: false, speed: 0.008, axis: "z" };
-      }
+      // Generate complex diagram from parameters
+      const artData = generateFromParameters(params);
 
       // Add the raw response for debugging
       artData.rawResponse = generatedText;
@@ -188,14 +208,188 @@ Generate a sophisticated line-art visualization that captures the essence of thi
 
   } catch (error) {
     console.error('Claude API error:', error);
-
-    // Re-throw the error with more context
-    if (error.message.includes('Claude API error:')) {
-      throw new Error(`Claude API failed with status ${error.message.split(':')[1]}`);
-    } else if (error.message.includes('Could not parse JSON')) {
-      throw new Error(`Claude returned invalid JSON. Raw response: ${generatedText || 'No response'}`);
-    } else {
-      throw new Error(`Claude API request failed: ${error.message}`);
-    }
+    throw new Error(`Claude API request failed: ${error.message}`);
   }
+}
+
+function generateFromParameters(params) {
+  const lines = [];
+  
+  console.log('Generating from parameters:', params);
+  
+  params.layers.forEach(layer => {
+    switch(layer.type) {
+      case 'grid':
+        // Generate dense grid lines
+        for (let x = layer.range[0]; x <= layer.range[1]; x += layer.spacing) {
+          lines.push({
+            points: [[x, layer.range[0], 0], [x, layer.range[1], 0]],
+            color: "#509EF0",
+            opacity: layer.opacity || 0.3,
+            lineWidth: 1.5
+          });
+        }
+        for (let y = layer.range[0]; y <= layer.range[1]; y += layer.spacing) {
+          lines.push({
+            points: [[layer.range[0], y, 0], [layer.range[1], y, 0]],
+            color: "#509EF0", 
+            opacity: layer.opacity || 0.3,
+            lineWidth: 1.5
+          });
+        }
+        break;
+        
+      case 'circles':
+        for (let i = 1; i <= layer.count; i++) {
+          const radius = (i / layer.count) * layer.max_radius;
+          const points = [];
+          for (let j = 0; j <= 64; j++) {
+            const angle = (j / 64) * Math.PI * 2;
+            points.push([
+              layer.center[0] + Math.cos(angle) * radius,
+              layer.center[1] + Math.sin(angle) * radius,
+              0
+            ]);
+          }
+          lines.push({
+            points: points,
+            color: "#509EF0",
+            opacity: layer.opacity || 0.6,
+            lineWidth: 1.5
+          });
+        }
+        break;
+        
+      case 'radial_lines':
+        for (let i = 0; i < layer.count; i++) {
+          const angle = (i / layer.count) * Math.PI * 2;
+          lines.push({
+            points: [
+              [layer.center[0], layer.center[1], 0],
+              [
+                layer.center[0] + Math.cos(angle) * layer.length,
+                layer.center[1] + Math.sin(angle) * layer.length,
+                0
+              ]
+            ],
+            color: "#509EF0",
+            opacity: layer.opacity || 0.4,
+            lineWidth: 1.5
+          });
+        }
+        break;
+        
+      case 'scatter_points':
+        for (let i = 0; i < layer.count; i++) {
+          let x, y, z = 0;
+          
+          if (layer.distribution === 'exponential') {
+            const t = (Math.random() - 0.5) * 8;
+            x = t;
+            y = t > 0 ? Math.exp(t * 0.3) - 1 : Math.random() * 2 - 1;
+            y = Math.min(Math.max(y, layer.bounds[0]), layer.bounds[1]);
+          } else if (layer.distribution === 'spiral') {
+            const angle = (i / layer.count) * Math.PI * 8; // Multiple turns
+            const radius = (i / layer.count) * Math.abs(layer.bounds[1] - layer.bounds[0]);
+            x = Math.cos(angle) * radius;
+            y = Math.sin(angle) * radius;
+          } else if (layer.distribution === 'clustered') {
+            // Create cluster centers and points around them
+            const clusterCenter = (Math.random() - 0.5) * (layer.bounds[1] - layer.bounds[0]);
+            x = clusterCenter + (Math.random() - 0.5) * 2;
+            y = clusterCenter + (Math.random() - 0.5) * 2;
+          } else {
+            x = (Math.random() - 0.5) * (layer.bounds[1] - layer.bounds[0]);
+            y = (Math.random() - 0.5) * (layer.bounds[1] - layer.bounds[0]);
+          }
+          
+          // Create small cross for each point
+          lines.push({
+            points: [[x-0.1, y, z], [x+0.1, y, z]],
+            color: "#509EF0",
+            opacity: layer.opacity || 0.8,
+            lineWidth: 1.5
+          });
+          lines.push({
+            points: [[x, y-0.1, z], [x, y+0.1, z]],
+            color: "#509EF0", 
+            opacity: layer.opacity || 0.8,
+            lineWidth: 1.5
+          });
+        }
+        break;
+        
+      case 'connection_lines':
+        // Generate random nodes and connect them
+        const nodes = [];
+        for (let i = 0; i < layer.node_count; i++) {
+          nodes.push([
+            (Math.random() - 0.5) * 12,
+            (Math.random() - 0.5) * 12,
+            (Math.random() - 0.5) * 2
+          ]);
+        }
+        
+        // Connect nodes based on probability
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            if (Math.random() < layer.connection_probability) {
+              lines.push({
+                points: [nodes[i], nodes[j]],
+                color: "#509EF0",
+                opacity: layer.opacity || 0.5,
+                lineWidth: 1.5
+              });
+            }
+          }
+        }
+        break;
+
+      case 'spiral':
+        const points = [];
+        for (let i = 0; i < layer.turns * layer.points_per_turn; i++) {
+          const t = i / layer.points_per_turn;
+          const angle = t * Math.PI * 2;
+          const radius = (t / layer.turns) * layer.max_radius;
+          points.push([
+            layer.center[0] + Math.cos(angle) * radius,
+            layer.center[1] + Math.sin(angle) * radius,
+            0
+          ]);
+        }
+        lines.push({
+          points: points,
+          color: "#509EF0",
+          opacity: layer.opacity || 0.7,
+          lineWidth: 1.5
+        });
+        break;
+
+      case 'wave_pattern':
+        for (let w = 0; w < layer.count; w++) {
+          const points = [];
+          const yOffset = (w - layer.count/2) * 0.5;
+          for (let x = -layer.length/2; x <= layer.length/2; x += 0.1) {
+            const y = yOffset + layer.amplitude * Math.sin(x * layer.frequency);
+            points.push([x, y, 0]);
+          }
+          lines.push({
+            points: points,
+            color: "#509EF0",
+            opacity: layer.opacity || 0.6,
+            lineWidth: 1.5
+          });
+        }
+        break;
+    }
+  });
+  
+  console.log(`Generated ${lines.length} lines from parameters`);
+  
+  return {
+    title: params.title,
+    description: params.description,
+    lines: lines,
+    camera: params.camera || { position: [0, 0, 12], lookAt: [0, 0, 0] }
+  };
 }
