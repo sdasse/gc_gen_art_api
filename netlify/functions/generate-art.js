@@ -89,23 +89,23 @@ async function generateWithClaude(userPrompt, apiKey) {
   const systemPrompt = `You are a technical diagram generator. Create complex line-art visualizations with EXACTLY these specifications:
 
 MANDATORY REQUIREMENTS:
-- MINIMUM 50 separate line elements (not 10-15 like you've been doing)
+- MINIMUM 100 separate line elements
 - ALL lines: lineWidth 1.5, color "#509EF0", opacity 1.0
 - Coordinate range: -8 to +8 
 - Complex curves: 20+ points each for smooth precision
 
 CREATE COMPLEX TECHNICAL DIAGRAMS LIKE:
-- Circuit boards with dozens of traces and connection points
+- Networks with 60 traces and connection points
 - Astronomical charts with coordinate grids and star positions  
 - Molecular structures with intricate bond networks
-- Radar displays with multiple sweep patterns and measurement scales
+- Radar displays with overlapping sweep patterns and measurement scales
 
 REQUIRED ELEMENTS (INCLUDE ALL):
-1. Background grid system (10+ lines)
-2. Primary structure/framework (8+ lines) 
-3. Secondary detail patterns (15+ lines)
-4. Measurement marks and annotations (7+ lines)
-5. Optional: Small circles at intersection points
+1. Grid system
+2. Primary structure/framework
+3. Secondary detail patterns
+4. Measurement marks and annotations
+5. Randomization and variation
 
 MATHEMATICAL PRECISION:
 - Use parametric equations for curves: x=r*cos(t), y=r*sin(t)
@@ -128,15 +128,6 @@ Generate exactly this JSON structure with no additional text:
       "color": "#509EF0",
       "opacity": 1,
       "lineWidth": 1.5
-    }
-  ],
-  "circles": [
-    {
-      "position": [x, y, z],
-      "radius": 0.1-0.3,
-      "color": "#509EF0",
-      "opacity": 1,
-      "filled": true
     }
   ],
   "camera": {
