@@ -86,71 +86,44 @@ exports.handler = async (event, context) => {
 };
 
 async function generateWithClaude(userPrompt, apiKey) {
-  const systemPrompt = `You are a technical diagram generator. Create complex line-art visualizations with EXACTLY these specifications:
+  const systemPrompt = `You are creating sophisticated technical line drawings. Look at these examples of the complexity I want:
 
-MANDATORY REQUIREMENTS:
-- MINIMUM 100 separate line elements
-- ALL lines: lineWidth 1.5, color "#509EF0", opacity 1.0
-- Coordinate range: -8 to +8 
-- Complex curves: 20+ points each for smooth precision
+  EXAMPLE 1: Radar system with 50+ concentric circles, 200+ radial lines, dense grid overlays, measurement scales, and scattered connection points.
 
-CREATE COMPLEX TECHNICAL DIAGRAMS LIKE:
-- Networks with 60 traces and connection points
-- Astronomical charts with coordinate grids and star positions  
-- Molecular structures with intricate bond networks
-- Radar displays with overlapping sweep patterns and measurement scales
+  EXAMPLE 2: Circuit board with 80+ rectangular components, 150+ connection traces, node clusters, and coordinate grids.
 
-REQUIRED ELEMENTS (INCLUDE ALL):
-1. Grid system
-2. Primary structure/framework
-3. Secondary detail patterns
-4. Measurement marks and annotations
-5. Randomization and variation
+  EXAMPLE 3: Scatter plot with 2000+ data points forming exponential curves, coordinate axes with tick marks, and annotation lines.
 
-MATHEMATICAL PRECISION:
-- Use parametric equations for curves: x=r*cos(t), y=r*sin(t)
-- Create logarithmic spirals, sine waves, geometric progressions
-- Apply golden ratio (1.618) for proportional spacing
-- Generate fractal-like recursive patterns
+  Your task: Create DENSE, LAYERED technical visualizations with similar complexity levels.
 
-QUALITY CHECK:
-Count your lines before responding. If you have fewer than 40 separate line elements, ADD MORE. Create layered, interconnected systems that demonstrate true technical complexity.
+  SIMPLE RULES:
+  1. Make it DENSE - use hundreds of lines, not dozens
+  2. Layer different systems on top of each other
+  3. Use coordinates between -8 and +8
+  4. All lines: color "#509EF0", opacity 1, lineWidth 1.5
 
-OUTPUT FORMAT:
-Generate exactly this JSON structure with no additional text:
+  PATTERN TYPES TO COMBINE:
+  - Dense grids (every 0.1 units)
+  - Concentric circles (every 0.2 radius)
+  - Radial lines (every 5 degrees)
+  - Scattered points/nodes
+  - Connection networks
+  - Measurement scales
 
-{
-  "title": "Technical description of the diagram",
-  "description": "Detailed explanation of the visual concept and construction",
-  "lines": [
-    {
-      "points": [[x1, y1, z1], [x2, y2, z2], ...],
-      "color": "#509EF0",
-      "opacity": 1,
-      "lineWidth": 1.5
-    }
-  ],
-  "camera": {
-    "position": [x, y, z],
-    "lookAt": [x, y, z]
-  },
-  "animation": {
-    "rotate": true/false,
-    "speed": 0.005-0.02,
-    "axis": "x"/"y"/"z"/"xyz"
+  FOR "${userPrompt}":
+  Think about what technical systems this relates to, then CREATE MULTIPLE OVERLAPPING LAYERS of those systems. Make it as dense and complex as a real technical schematic.
+
+  JSON FORMAT:
+  {
+    "title": "Brief title",
+    "description": "What you created", 
+    "lines": [
+      {"points": [[x,y,z], [x,y,z], ...], "color": "#509EF0", "opacity": 1, "lineWidth": 1.5}
+    ],
+    "camera": {"position": [0, 0, 12], "lookAt": [0, 0, 0]}
   }
-}
 
-DESIGN PROCESS:
-1. Analyze the user's concept and determine the most appropriate technical domain
-2. Consider the underlying structure and technical relationships
-3. Plan the composition with primary, secondary, and tertiary elements following visual hierarchy
-4. Create detailed coordinate calculations for precise geometry using mathematical relationships
-5. Apply visual hierarchy through systematic line weight and opacity assignments
-6. Add technical details like grids, annotations, or measurement marks that serve the concept
-7. Set appropriate camera position to enhance the technical aesthetic
-
-Remember: Create sophisticated, technically precise diagrams that could belong in an engineering textbook, scientific paper, or architectural blueprint. Avoid simple geometric shapes - instead create complex, meaningful technical visualizations that demonstrate systematic precision over random complexity.`;
+  CREATE COMPLEXITY THROUGH QUANTITY AND LAYERING.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
