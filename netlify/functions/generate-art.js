@@ -1,4 +1,5 @@
 
+
 // FIXED: Enhanced system prompt that only uses algorithms we actually implement
 async function generateAlgorithmsWithClaude(userPrompt, apiKey) {
   // Enhanced validation (keeping your existing validation)
@@ -27,8 +28,7 @@ For the concept "${userPrompt}", return ONLY this JSON structure with 3-6 algori
   "algorithms": [
     // AVAILABLE ALGORITHMS (all implemented):
     // STRUCTURAL: "grid", "circles", "radial_lines", "network", "spiral"
-    // COMPLEX: "flow_field", "voronoi_diagram", "delaunay_triangulation", "particle_system", "orbital_system"
-    // DATA: "scatter", "wave", "logarithmic_spiral", "mesh_deformation"
+    // COMPLEX: "wave", "logarithmic_spiral", "scatter"
     
     {
       "type": "circles",
@@ -77,9 +77,9 @@ VARIATION RULES:
 
 GOOD COMBINATIONS:
 - circles (center [0,0], large) + circles (center [4,-2], small) + radial_lines + scatter
-- grid (with noise) + network + circles (multiple centers) + particle_system  
-- spiral + circles (concentric) + delaunay_triangulation + scatter
-- flow_field + circles (small, scattered) + radial_lines (fan-like) + mesh_deformation
+- grid (with noise) + network + circles (multiple centers) + wave  
+- spiral + circles (concentric) + logarithmic_spiral + scatter
+- radial_lines + circles (small, scattered) + network + grid
 
 Return ONLY the JSON - no explanations.`;
 
@@ -207,8 +207,7 @@ Return ONLY the JSON - no explanations.`;
       // Check if algorithm type exists in our generators
       const validTypes = [
         'grid', 'circles', 'radial_lines', 'network', 'spiral', 'wave', 'scatter',
-        'logarithmic_spiral', 'flow_field', 'voronoi_diagram', 'delaunay_triangulation',
-        'mesh_deformation', 'particle_system', 'orbital_system'
+        'logarithmic_spiral'
       ];
       
       if (!validTypes.includes(alg.type)) {
@@ -232,370 +231,407 @@ Return ONLY the JSON - no explanations.`;
   }
 }
 
-// FIXED: Enhanced algorithms that add variation within existing structure
+// FIXED: Robust algorithms with comprehensive error handling
 const enhancedAlgorithmGenerators = {
-  // OVERRIDE: Enhanced circles with better variation
+  // SAFE: Enhanced circles with better variation
   circles: (params) => {
-    const lines = [];
-    const center = params.center || [0, 0];
-    const count = Math.max(5, Math.min(30, params.count || 10));
-    const maxRadius = Math.max(1, Math.min(8, params.max_radius || 5));
-    const minRadius = Math.max(0.1, Math.min(maxRadius, params.min_radius || 0.5));
-    const style = params.style || "clean";
+    try {
+      const lines = [];
+      const center = Array.isArray(params.center) && params.center.length >= 2 ? params.center : [0, 0];
+      const count = Math.max(5, Math.min(30, Number(params.count) || 10));
+      const maxRadius = Math.max(1, Math.min(8, Number(params.max_radius) || 5));
+      const minRadius = Math.max(0.1, Math.min(maxRadius, Number(params.min_radius) || 0.5));
+      const style = params.style || "clean";
 
-    // Add some randomization to make each generation unique
-    const actualCount = count + Math.floor((Math.random() - 0.5) * 4);
-    
-    for (let i = 0; i < actualCount; i++) {
-      const radius = minRadius + (maxRadius - minRadius) * (i / actualCount);
-      const points = [];
-      const segments = Math.max(16, Math.min(64, Math.floor(radius * 10)));
+      // Add some randomization to make each generation unique
+      const actualCount = count + Math.floor((Math.random() - 0.5) * 4);
       
-      // Add organic variation for some circles
-      const variation = (style === "organic" || Math.random() < 0.2) ? 0.05 : 0;
+      for (let i = 0; i < actualCount; i++) {
+        const radius = minRadius + (maxRadius - minRadius) * (i / actualCount);
+        const points = [];
+        const segments = Math.max(16, Math.min(64, Math.floor(radius * 10)));
+        
+        // Add organic variation for some circles
+        const variation = (style === "organic" || Math.random() < 0.2) ? 0.05 : 0;
 
-      for (let j = 0; j <= segments; j++) {
-        const angle = (j / segments) * Math.PI * 2;
-        const r = radius + (Math.random() - 0.5) * variation;
-        points.push([
-          center[0] + Math.cos(angle) * r,
-          center[1] + Math.sin(angle) * r,
-          0
+        for (let j = 0; j <= segments; j++) {
+          const angle = (j / segments) * Math.PI * 2;
+          const r = radius + (Math.random() - 0.5) * variation;
+          points.push([
+            center[0] + Math.cos(angle) * r,
+            center[1] + Math.sin(angle) * r,
+            0
+          ]);
+        }
+
+        // Vary opacity and occasionally make lines dashed
+        const opacity = 0.4 + (i / actualCount) * 0.4 + Math.random() * 0.1;
+        const isDashed = Math.random() < 0.15; // 15% chance of dashed
+
+        lines.push({
+          points: points,
+          color: "#509EF0",
+          opacity: Math.min(0.9, opacity),
+          lineWidth: 1.5,
+          isDashed: isDashed
+        });
+      }
+
+      // Sometimes add radial fill lines
+      if (Math.random() < 0.3) {
+        const numRadial = 8 + Math.floor(Math.random() * 16);
+        for (let i = 0; i < numRadial; i++) {
+          const angle = (i / numRadial) * Math.PI * 2;
+          lines.push({
+            points: [
+              [center[0], center[1], 0],
+              [center[0] + Math.cos(angle) * maxRadius, center[1] + Math.sin(angle) * maxRadius, 0]
+            ],
+            color: "#509EF0",
+            opacity: 0.3,
+            lineWidth: 1.5,
+            isDashed: Math.random() < 0.4 // Higher chance for radial lines to be dashed
+          });
+        }
+      }
+
+      return lines;
+    } catch (error) {
+      console.error('Error in circles algorithm:', error);
+      return [];
+    }
+  },
+
+  // SAFE: Enhanced radial_lines with arrows
+  radial_lines: (params) => {
+    try {
+      const lines = [];
+      const center = Array.isArray(params.center) && params.center.length >= 2 ? params.center : [0, 0];
+      const count = Math.max(8, Math.min(72, Number(params.count) || 24));
+      const length = Math.max(1, Math.min(10, Number(params.length) || 5));
+      const variation = Math.max(0, Math.min(2, Number(params.variation) || 0));
+
+      // Add some randomness to count
+      const actualCount = count + Math.floor((Math.random() - 0.5) * 8);
+
+      for (let i = 0; i < actualCount; i++) {
+        const angle = (i / actualCount) * Math.PI * 2;
+        const lineLength = length + (Math.random() - 0.5) * variation;
+        const isDashed = Math.random() < 0.2;
+        const hasArrow = Math.random() < 0.3; // 30% chance of arrow
+
+        const endX = center[0] + Math.cos(angle) * lineLength;
+        const endY = center[1] + Math.sin(angle) * lineLength;
+
+        // Main line
+        lines.push({
+          points: [
+            [center[0], center[1], 0],
+            [endX, endY, 0]
+          ],
+          color: "#509EF0",
+          opacity: 0.6 + Math.random() * 0.2,
+          lineWidth: 1.5,
+          isDashed: isDashed
+        });
+
+        // Add arrow head if selected
+        if (hasArrow && lineLength > 0.5) {
+          const arrowSize = Math.min(0.15, lineLength * 0.1);
+          lines.push({
+            points: [
+              [endX, endY, 0],
+              [endX - Math.cos(angle - 0.3) * arrowSize, endY - Math.sin(angle - 0.3) * arrowSize, 0]
+            ],
+            color: "#509EF0",
+            opacity: 0.8,
+            lineWidth: 1.5
+          });
+          lines.push({
+            points: [
+              [endX, endY, 0],
+              [endX - Math.cos(angle + 0.3) * arrowSize, endY - Math.sin(angle + 0.3) * arrowSize, 0]
+            ],
+            color: "#509EF0",
+            opacity: 0.8,
+            lineWidth: 1.5
+          });
+        }
+      }
+
+      return lines;
+    } catch (error) {
+      console.error('Error in radial_lines algorithm:', error);
+      return [];
+    }
+  },
+
+  // SAFE: Enhanced scatter with small 3D-like markers
+  scatter: (params) => {
+    try {
+      const lines = [];
+      const count = Math.max(50, Math.min(400, Number(params.count) || 100));
+      const distribution = params.distribution || "random";
+      const bounds = Array.isArray(params.bounds) ? params.bounds : [-5, 5];
+      const markerStyle = params.marker_style || "mixed"; // "cross", "circle", "square", "mixed"
+
+      for (let i = 0; i < count; i++) {
+        let x, y, z;
+
+        // Distribution logic
+        if (distribution === "exponential") {
+          const t = (Math.random() - 0.5) * 8;
+          x = t;
+          y = t > 0 ? Math.exp(t * 0.3) - 1 : (Math.random() - 0.5) * 2;
+          z = (Math.random() - 0.5) * 2;
+        } else if (distribution === "clustered") {
+          const clusterCenter = [(Math.random() - 0.5) * bounds[1], (Math.random() - 0.5) * bounds[1]];
+          x = clusterCenter[0] + (Math.random() - 0.5) * 2;
+          y = clusterCenter[1] + (Math.random() - 0.5) * 2;
+          z = (Math.random() - 0.5) * 2;
+        } else {
+          x = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
+          y = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
+          z = (Math.random() - 0.5) * 4;
+        }
+
+        // Enhanced markers with variation
+        const size = 0.03 + Math.random() * 0.04;
+        const currentMarkerStyle = markerStyle === "mixed" ? 
+          ["cross", "circle", "square"][Math.floor(Math.random() * 3)] : markerStyle;
+        const isDashed = Math.random() < 0.1;
+
+        if (currentMarkerStyle === "cross") {
+          lines.push({
+            points: [[x-size, y, z], [x+size, y, z]],
+            color: "#509EF0",
+            opacity: 0.7 + Math.random() * 0.2,
+            lineWidth: 1.5,
+            isDashed: isDashed
+          });
+          lines.push({
+            points: [[x, y-size, z], [x, y+size, z]],
+            color: "#509EF0",
+            opacity: 0.7 + Math.random() * 0.2,
+            lineWidth: 1.5,
+            isDashed: isDashed
+          });
+        } else if (currentMarkerStyle === "circle") {
+          const circlePoints = [];
+          const segments = 8;
+          for (let j = 0; j <= segments; j++) {
+            const angle = (j / segments) * Math.PI * 2;
+            circlePoints.push([
+              x + Math.cos(angle) * size,
+              y + Math.sin(angle) * size,
+              z
+            ]);
+          }
+          lines.push({
+            points: circlePoints,
+            color: "#509EF0",
+            opacity: 0.6 + Math.random() * 0.2,
+            lineWidth: 1.5,
+            isDashed: isDashed
+          });
+        } else if (currentMarkerStyle === "square") {
+          const squarePoints = [
+            [x-size, y-size, z], [x+size, y-size, z],
+            [x+size, y+size, z], [x-size, y+size, z],
+            [x-size, y-size, z]
+          ];
+          lines.push({
+            points: squarePoints,
+            color: "#509EF0",
+            opacity: 0.6 + Math.random() * 0.2,
+            lineWidth: 1.5,
+            isDashed: isDashed
+          });
+        }
+      }
+
+      return lines;
+    } catch (error) {
+      console.error('Error in scatter algorithm:', error);
+      return [];
+    }
+  },
+
+  // SAFE: Grid algorithm with error handling
+  grid: (params) => {
+    try {
+      const lines = [];
+      const spacing = Math.max(0.1, Math.min(2, Number(params.spacing) || 0.5));
+      const size = Math.max(2, Math.min(12, Number(params.size) || 8));
+      const noise = Math.max(0, Math.min(1, Number(params.noise) || 0));
+
+      for (let x = -size; x <= size; x += spacing) {
+        const yOffset = noise * (Math.random() - 0.5);
+        lines.push({
+          points: [[x, -size + yOffset, 0], [x, size + yOffset, 0]],
+          color: "#509EF0",
+          opacity: 0.4,
+          lineWidth: 1.5,
+          isDashed: Math.random() < 0.1
+        });
+      }
+
+      for (let y = -size; y <= size; y += spacing) {
+        const xOffset = noise * (Math.random() - 0.5);
+        lines.push({
+          points: [[-size + xOffset, y, 0], [size + xOffset, y, 0]],
+          color: "#509EF0",
+          opacity: 0.4,
+          lineWidth: 1.5,
+          isDashed: Math.random() < 0.1
+        });
+      }
+
+      return lines;
+    } catch (error) {
+      console.error('Error in grid algorithm:', error);
+      return [];
+    }
+  },
+
+  // SAFE: Network algorithm with error handling
+  network: (params) => {
+    try {
+      const lines = [];
+      const nodes = Math.max(5, Math.min(50, Number(params.nodes) || 20));
+      const bounds = Array.isArray(params.bounds) ? params.bounds : [-5, 5];
+      const connectionProb = Math.max(0.05, Math.min(0.8, Number(params.connection_probability) || 0.2));
+
+      // Generate random nodes
+      const nodePositions = [];
+      for (let i = 0; i < nodes; i++) {
+        nodePositions.push([
+          (Math.random() - 0.5) * (bounds[1] - bounds[0]),
+          (Math.random() - 0.5) * (bounds[1] - bounds[0]),
+          (Math.random() - 0.5) * 2
         ]);
       }
 
-      // Vary opacity and occasionally make lines dashed
-      const opacity = 0.4 + (i / actualCount) * 0.4 + Math.random() * 0.1;
-      const isDashed = Math.random() < 0.15; // 15% chance of dashed
+      // Connect nodes based on probability
+      for (let i = 0; i < nodes; i++) {
+        for (let j = i + 1; j < nodes; j++) {
+          if (Math.random() < connectionProb) {
+            lines.push({
+              points: [nodePositions[i], nodePositions[j]],
+              color: "#509EF0",
+              opacity: 0.5,
+              lineWidth: 1.5,
+              isDashed: Math.random() < 0.2
+            });
+          }
+        }
+      }
+
+      return lines;
+    } catch (error) {
+      console.error('Error in network algorithm:', error);
+      return [];
+    }
+  },
+
+  // SAFE: Spiral algorithm with error handling
+  spiral: (params) => {
+    try {
+      const lines = [];
+      const turns = Math.max(1, Math.min(10, Number(params.turns) || 5));
+      const maxRadius = Math.max(1, Math.min(10, Number(params.max_radius) || 6));
+      const points = [];
+
+      const totalPoints = turns * 50;
+      for (let i = 0; i <= totalPoints; i++) {
+        const t = i / totalPoints;
+        const angle = t * turns * Math.PI * 2;
+        const radius = t * maxRadius;
+
+        points.push([
+          Math.cos(angle) * radius,
+          Math.sin(angle) * radius,
+          (Math.random() - 0.5) * 0.5
+        ]);
+      }
 
       lines.push({
         points: points,
         color: "#509EF0",
-        opacity: Math.min(0.9, opacity),
+        opacity: 0.7,
         lineWidth: 1.5,
-        isDashed: isDashed
-      });
-    }
-
-    // Sometimes add radial fill lines
-    if (Math.random() < 0.3) {
-      const numRadial = 8 + Math.floor(Math.random() * 16);
-      for (let i = 0; i < numRadial; i++) {
-        const angle = (i / numRadial) * Math.PI * 2;
-        lines.push({
-          points: [
-            [center[0], center[1], 0],
-            [center[0] + Math.cos(angle) * maxRadius, center[1] + Math.sin(angle) * maxRadius, 0]
-          ],
-          color: "#509EF0",
-          opacity: 0.3,
-          lineWidth: 1.5,
-          isDashed: Math.random() < 0.4 // Higher chance for radial lines to be dashed
-        });
-      }
-    }
-
-    return lines;
-  },
-
-  // OVERRIDE: Enhanced radial_lines with arrows
-  radial_lines: (params) => {
-    const lines = [];
-    const center = params.center || [0, 0];
-    const count = Math.max(8, Math.min(72, params.count || 24));
-    const length = Math.max(1, Math.min(10, params.length || 5));
-    const variation = Math.max(0, Math.min(2, params.variation || 0));
-
-    // Add some randomness to count
-    const actualCount = count + Math.floor((Math.random() - 0.5) * 8);
-
-    for (let i = 0; i < actualCount; i++) {
-      const angle = (i / actualCount) * Math.PI * 2;
-      const lineLength = length + (Math.random() - 0.5) * variation;
-      const isDashed = Math.random() < 0.2;
-      const hasArrow = Math.random() < 0.3; // 30% chance of arrow
-
-      const endX = center[0] + Math.cos(angle) * lineLength;
-      const endY = center[1] + Math.sin(angle) * lineLength;
-
-      // Main line
-      lines.push({
-        points: [
-          [center[0], center[1], 0],
-          [endX, endY, 0]
-        ],
-        color: "#509EF0",
-        opacity: 0.6 + Math.random() * 0.2,
-        lineWidth: 1.5,
-        isDashed: isDashed
+        isDashed: Math.random() < 0.3
       });
 
-      // Add arrow head if selected
-      if (hasArrow && lineLength > 0.5) {
-        const arrowSize = Math.min(0.15, lineLength * 0.1);
-        lines.push({
-          points: [
-            [endX, endY, 0],
-            [endX - Math.cos(angle - 0.3) * arrowSize, endY - Math.sin(angle - 0.3) * arrowSize, 0]
-          ],
-          color: "#509EF0",
-          opacity: 0.8,
-          lineWidth: 1.5
-        });
-        lines.push({
-          points: [
-            [endX, endY, 0],
-            [endX - Math.cos(angle + 0.3) * arrowSize, endY - Math.sin(angle + 0.3) * arrowSize, 0]
-          ],
-          color: "#509EF0",
-          opacity: 0.8,
-          lineWidth: 1.5
-        });
-      }
+      return lines;
+    } catch (error) {
+      console.error('Error in spiral algorithm:', error);
+      return [];
     }
-
-    return lines;
   },
 
-  // OVERRIDE: Enhanced scatter with small 3D-like markers
-  scatter: (params) => {
-    const lines = [];
-    const count = Math.max(50, Math.min(400, params.count || 100));
-    const distribution = params.distribution || "random";
-    const bounds = params.bounds || [-5, 5];
-    const markerStyle = params.marker_style || "mixed"; // "cross", "circle", "square", "mixed"
-
-    for (let i = 0; i < count; i++) {
-      let x, y, z;
-
-      // Distribution logic
-      if (distribution === "exponential") {
-        const t = (Math.random() - 0.5) * 8;
-        x = t;
-        y = t > 0 ? Math.exp(t * 0.3) - 1 : (Math.random() - 0.5) * 2;
-        z = (Math.random() - 0.5) * 2;
-      } else if (distribution === "clustered") {
-        const clusterCenter = [(Math.random() - 0.5) * bounds[1], (Math.random() - 0.5) * bounds[1]];
-        x = clusterCenter[0] + (Math.random() - 0.5) * 2;
-        y = clusterCenter[1] + (Math.random() - 0.5) * 2;
-        z = (Math.random() - 0.5) * 2;
-      } else {
-        x = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
-        y = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
-        z = (Math.random() - 0.5) * 4;
-      }
-
-      // Enhanced markers with variation
-      const size = 0.03 + Math.random() * 0.04;
-      const currentMarkerStyle = markerStyle === "mixed" ? 
-        ["cross", "circle", "square"][Math.floor(Math.random() * 3)] : markerStyle;
-      const isDashed = Math.random() < 0.1;
-
-      if (currentMarkerStyle === "cross") {
-        lines.push({
-          points: [[x-size, y, z], [x+size, y, z]],
-          color: "#509EF0",
-          opacity: 0.7 + Math.random() * 0.2,
-          lineWidth: 1.5,
-          isDashed: isDashed
-        });
-        lines.push({
-          points: [[x, y-size, z], [x, y+size, z]],
-          color: "#509EF0",
-          opacity: 0.7 + Math.random() * 0.2,
-          lineWidth: 1.5,
-          isDashed: isDashed
-        });
-      } else if (currentMarkerStyle === "circle") {
-        const circlePoints = [];
-        const segments = 8;
-        for (let j = 0; j <= segments; j++) {
-          const angle = (j / segments) * Math.PI * 2;
-          circlePoints.push([
-            x + Math.cos(angle) * size,
-            y + Math.sin(angle) * size,
-            z
-          ]);
-        }
-        lines.push({
-          points: circlePoints,
-          color: "#509EF0",
-          opacity: 0.6 + Math.random() * 0.2,
-          lineWidth: 1.5,
-          isDashed: isDashed
-        });
-      } else if (currentMarkerStyle === "square") {
-        const squarePoints = [
-          [x-size, y-size, z], [x+size, y-size, z],
-          [x+size, y+size, z], [x-size, y+size, z],
-          [x-size, y-size, z]
-        ];
-        lines.push({
-          points: squarePoints,
-          color: "#509EF0",
-          opacity: 0.6 + Math.random() * 0.2,
-          lineWidth: 1.5,
-          isDashed: isDashed
-        });
-      }
-    }
-
-    return lines;
-  },
-
-  // Placeholder algorithms that need to be implemented
-  grid: (params) => {
-    const lines = [];
-    const spacing = params.spacing || 0.5;
-    const size = params.size || 8;
-    const noise = params.noise || 0;
-
-    for (let x = -size; x <= size; x += spacing) {
-      const yOffset = noise * (Math.random() - 0.5);
-      lines.push({
-        points: [[x, -size + yOffset, 0], [x, size + yOffset, 0]],
-        color: "#509EF0",
-        opacity: 0.4,
-        lineWidth: 1.5,
-        isDashed: Math.random() < 0.1
-      });
-    }
-
-    for (let y = -size; y <= size; y += spacing) {
-      const xOffset = noise * (Math.random() - 0.5);
-      lines.push({
-        points: [[-size + xOffset, y, 0], [size + xOffset, y, 0]],
-        color: "#509EF0",
-        opacity: 0.4,
-        lineWidth: 1.5,
-        isDashed: Math.random() < 0.1
-      });
-    }
-
-    return lines;
-  },
-
-  network: (params) => {
-    const lines = [];
-    const nodes = params.nodes || 20;
-    const bounds = params.bounds || [-5, 5];
-    const connectionProb = params.connection_probability || 0.2;
-
-    // Generate random nodes
-    const nodePositions = [];
-    for (let i = 0; i < nodes; i++) {
-      nodePositions.push([
-        (Math.random() - 0.5) * (bounds[1] - bounds[0]),
-        (Math.random() - 0.5) * (bounds[1] - bounds[0]),
-        (Math.random() - 0.5) * 2
-      ]);
-    }
-
-    // Connect nodes based on probability
-    for (let i = 0; i < nodes; i++) {
-      for (let j = i + 1; j < nodes; j++) {
-        if (Math.random() < connectionProb) {
-          lines.push({
-            points: [nodePositions[i], nodePositions[j]],
-            color: "#509EF0",
-            opacity: 0.5,
-            lineWidth: 1.5,
-            isDashed: Math.random() < 0.2
-          });
-        }
-      }
-    }
-
-    return lines;
-  },
-
-  spiral: (params) => {
-    const lines = [];
-    const turns = params.turns || 5;
-    const maxRadius = params.max_radius || 6;
-    const points = [];
-
-    const totalPoints = turns * 50;
-    for (let i = 0; i <= totalPoints; i++) {
-      const t = i / totalPoints;
-      const angle = t * turns * Math.PI * 2;
-      const radius = t * maxRadius;
-
-      points.push([
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        (Math.random() - 0.5) * 0.5
-      ]);
-    }
-
-    lines.push({
-      points: points,
-      color: "#509EF0",
-      opacity: 0.7,
-      lineWidth: 1.5,
-      isDashed: Math.random() < 0.3
-    });
-
-    return lines;
-  },
-
+  // SAFE: Wave algorithm with error handling
   wave: (params) => {
-    const lines = [];
-    const frequency = params.frequency || 2;
-    const amplitude = params.amplitude || 3;
-    const length = params.length || 12;
-    const points = [];
+    try {
+      const lines = [];
+      const frequency = Math.max(0.5, Math.min(5, Number(params.frequency) || 2));
+      const amplitude = Math.max(0.5, Math.min(6, Number(params.amplitude) || 3));
+      const length = Math.max(4, Math.min(20, Number(params.length) || 12));
+      const points = [];
 
-    for (let x = -length/2; x <= length/2; x += 0.1) {
-      const y = amplitude * Math.sin(frequency * x);
-      points.push([x, y, 0]);
+      for (let x = -length/2; x <= length/2; x += 0.1) {
+        const y = amplitude * Math.sin(frequency * x);
+        points.push([x, y, 0]);
+      }
+
+      lines.push({
+        points: points,
+        color: "#509EF0",
+        opacity: 0.8,
+        lineWidth: 1.5
+      });
+
+      return lines;
+    } catch (error) {
+      console.error('Error in wave algorithm:', error);
+      return [];
     }
-
-    lines.push({
-      points: points,
-      color: "#509EF0",
-      opacity: 0.8,
-      lineWidth: 1.5
-    });
-
-    return lines;
   },
 
+  // SAFE: Logarithmic spiral algorithm with error handling
   logarithmic_spiral: (params) => {
-    const lines = [];
-    const a = params.growth_factor || 0.3;
-    const turns = params.turns || 4;
-    const points = [];
+    try {
+      const lines = [];
+      const a = Math.max(0.1, Math.min(1, Number(params.growth_factor) || 0.3));
+      const turns = Math.max(1, Math.min(8, Number(params.turns) || 4));
+      const points = [];
 
-    for (let theta = 0; theta <= turns * Math.PI * 2; theta += 0.1) {
-      const r = a * Math.exp(0.2 * theta);
-      points.push([
-        r * Math.cos(theta),
-        r * Math.sin(theta),
-        0
-      ]);
+      for (let theta = 0; theta <= turns * Math.PI * 2; theta += 0.1) {
+        const r = a * Math.exp(0.2 * theta);
+        if (r > 20) break; // Prevent infinite growth
+        points.push([
+          r * Math.cos(theta),
+          r * Math.sin(theta),
+          0
+        ]);
+      }
+
+      lines.push({
+        points: points,
+        color: "#509EF0",
+        opacity: 0.7,
+        lineWidth: 1.5
+      });
+
+      return lines;
+    } catch (error) {
+      console.error('Error in logarithmic_spiral algorithm:', error);
+      return [];
     }
-
-    lines.push({
-      points: points,
-      color: "#509EF0",
-      opacity: 0.7,
-      lineWidth: 1.5
-    });
-
-    return lines;
-  },
-
-  // Placeholder for more complex algorithms
-  flow_field: (params) => { return []; },
-  voronoi_diagram: (params) => { return []; },
-  delaunay_triangulation: (params) => { return []; },
-  mesh_deformation: (params) => { return []; },
-  particle_system: (params) => { return []; },
-  orbital_system: (params) => { return []; }
+  }
 };
 
-// Enhanced line rendering function that handles dashed lines
+// Enhanced line rendering function that handles dashed lines with comprehensive error handling
 function generateFromAlgorithms(algorithmData) {
   const allLines = [];
   const maxTotalLines = 3000; // Reduced for better performance
@@ -643,30 +679,45 @@ function generateFromAlgorithms(algorithmData) {
 
         // Enhanced line validation and processing
         const validLines = lines.filter(line => {
-          if (!line || typeof line !== 'object') return false;
-          if (!Array.isArray(line.points)) return false;
-          if (line.points.length < 2) return false;
+          try {
+            if (!line || typeof line !== 'object') return false;
+            if (!Array.isArray(line.points)) return false;
+            if (line.points.length < 2) return false;
 
-          return line.points.every(point => {
-            if (!Array.isArray(point) || point.length !== 3) return false;
-            return point.every(coord => typeof coord === 'number' && isFinite(coord));
-          });
-        }).map(line => {
-          // Ensure consistent line weight and process dashed lines
-          const processedLine = {
-            ...line,
-            lineWidth: 1.5, // Force consistent line weight
-            color: line.color || "#509EF0",
-            opacity: Math.max(0.1, Math.min(1.0, line.opacity || 0.6))
-          };
-
-          // Handle dashed lines by creating segmented geometry
-          if (line.isDashed && line.points.length > 1) {
-            processedLine.isDashed = true;
-            processedLine.dashArray = [0.1, 0.05]; // 10% dash, 5% gap relative to line length
+            return line.points.every(point => {
+              if (!Array.isArray(point) || point.length !== 3) return false;
+              return point.every(coord => typeof coord === 'number' && isFinite(coord));
+            });
+          } catch (validationError) {
+            console.warn('Line validation error:', validationError);
+            return false;
           }
+        }).map(line => {
+          try {
+            // Ensure consistent line weight and process dashed lines
+            const processedLine = {
+              ...line,
+              lineWidth: 1.5, // Force consistent line weight
+              color: line.color || "#509EF0",
+              opacity: Math.max(0.1, Math.min(1.0, Number(line.opacity) || 0.6))
+            };
 
-          return processedLine;
+            // Handle dashed lines by creating segmented geometry
+            if (line.isDashed && line.points.length > 1) {
+              processedLine.isDashed = true;
+              processedLine.dashArray = [0.1, 0.05]; // 10% dash, 5% gap relative to line length
+            }
+
+            return processedLine;
+          } catch (processingError) {
+            console.warn('Line processing error:', processingError);
+            return {
+              points: line.points,
+              color: "#509EF0",
+              opacity: 0.6,
+              lineWidth: 1.5
+            };
+          }
         });
 
         lines = validLines;
@@ -817,17 +868,23 @@ function createFallbackVisualization() {
 }
 
 function validateCamera(camera) {
-  if (!camera || typeof camera !== 'object') {
+  try {
+    if (!camera || typeof camera !== 'object') {
+      return { position: [8, 6, 10], lookAt: [0, 0, 0] };
+    }
+
+    const position = Array.isArray(camera.position) && camera.position.length === 3 && 
+      camera.position.every(coord => typeof coord === 'number' && isFinite(coord))
+      ? camera.position : [8, 6, 10];
+
+    const lookAt = Array.isArray(camera.lookAt) && camera.lookAt.length === 3 && 
+      camera.lookAt.every(coord => typeof coord === 'number' && isFinite(coord))
+      ? camera.lookAt : [0, 0, 0];
+
+    return { position, lookAt };
+  } catch (error) {
+    console.error('Error validating camera:', error);
     return { position: [8, 6, 10], lookAt: [0, 0, 0] };
   }
-
-  const position = Array.isArray(camera.position) && camera.position.length === 3 && 
-    camera.position.every(coord => typeof coord === 'number' && isFinite(coord))
-    ? camera.position : [8, 6, 10];
-
-  const lookAt = Array.isArray(camera.lookAt) && camera.lookAt.length === 3 && 
-    camera.lookAt.every(coord => typeof coord === 'number' && isFinite(coord))
-    ? camera.lookAt : [0, 0, 0];
-
-  return { position, lookAt };
 }
+
