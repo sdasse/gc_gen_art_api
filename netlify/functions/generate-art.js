@@ -1,25 +1,29 @@
 
 // Enhanced API handler for generating art using Claude with varied composition approach
 exports.handler = async (event, context) => {
-  // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
+  // Standard CORS headers for all responses
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
 
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-      },
+      headers: corsHeaders,
       body: ''
+    };
+  }
+
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
 
@@ -32,8 +36,8 @@ exports.handler = async (event, context) => {
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
       return {
         statusCode: 400,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ error: 'Prompt is required' })
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Prompt is required and must be a non-empty string' })
       };
     }
 
@@ -41,7 +45,7 @@ exports.handler = async (event, context) => {
     if (!claudeApiKey) {
       return {
         statusCode: 500,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: corsHeaders,
         body: JSON.stringify({ 
           error: 'Claude API key not configured. Please set ANTHROPIC_API_KEY environment variable.' 
         })
@@ -54,22 +58,24 @@ exports.handler = async (event, context) => {
     
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-      },
+      headers: corsHeaders,
       body: JSON.stringify(artData)
     };
 
   } catch (error) {
     console.error('Generation error:', error);
 
+    // Ensure error message is properly serialized
+    const errorMessage = error?.message || 'Unknown error occurred';
+    const errorDetails = error?.stack || error?.toString() || 'No additional details available';
+
     return {
       statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: corsHeaders,
       body: JSON.stringify({ 
-        error: `Generation failed: ${error.message}`,
-        details: error.stack || 'No additional details available'
+        error: `Generation failed: ${errorMessage}`,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
       })
     };
   }
