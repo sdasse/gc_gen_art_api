@@ -92,7 +92,7 @@ async function generateWithClaude(userPrompt, apiKey) {
 CORE AESTHETIC:
 - Complex layered systems with 200-600+ lines
 - Use full 3D space: coordinates -8 to +8
-- Vary opacity (0.2-1.0) and lineWidth (0.5-2.5) for depth
+- Keep consistent opacity at 1.0 and lineWidth 1.5
 - Layer multiple visual systems at different Z-depths
 
 CREATIVE FREEDOM:
@@ -102,7 +102,7 @@ Interpret "${userPrompt}" through ANY of these approaches:
 - Particle systems, scattered constellations, point clouds
 - Network graphs, connection webs, branching trees
 - Mathematical surfaces, parametric curves, fractals
-- Technical diagrams, circuit patterns, measurement grids
+- Technical diagrams, wiring diagrams, measurement grids
 - Abstract compositions, rhythmic patterns, visual music
 
 MIX AND LAYER multiple approaches for complexity. Think beyond literal representation - what visual essence captures this concept?
