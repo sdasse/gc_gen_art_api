@@ -1,7 +1,4 @@
 
-// Import domain configuration
-const domainConfig = require('./domain-config.js');
-
 // API handler for generating art using Claude with varied composition approach
 exports.handler = async (event, context) => {
   // Handle CORS preflight
