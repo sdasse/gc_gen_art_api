@@ -1,4 +1,3 @@
-
 // Enhanced API handler for generating art using Claude with varied composition approach
 exports.handler = async (event, context) => {
   // Standard CORS headers for all responses
@@ -55,7 +54,7 @@ exports.handler = async (event, context) => {
     // Use enhanced Claude generation
     const algorithmData = await generateAlgorithmsWithClaude(prompt.trim(), claudeApiKey);
     const artData = generateFromAlgorithms(algorithmData);
-    
+
     return {
       statusCode: 200,
       headers: corsHeaders,
@@ -110,7 +109,7 @@ For the concept "${userPrompt}", return ONLY this JSON structure with 3-6 algori
     // AVAILABLE ALGORITHMS (all implemented):
     // STRUCTURAL: "grid", "circles", "radial_lines", "network", "spiral"
     // COMPLEX: "wave", "logarithmic_spiral", "scatter"
-    
+
     {
       "type": "circles",
       "params": {
@@ -149,18 +148,20 @@ For the concept "${userPrompt}", return ONLY this JSON structure with 3-6 algori
   "camera": {"position": [8, 6, 10], "lookAt": [0, 0, 0]}
 }
 
-VARIATION RULES:
-- Use MULTIPLE CENTERS: Place circles/radial_lines at different positions like [0,0], [3,-2], [-2,3]
-- Use DIFFERENT SCALES: Same algorithm with different sizes (radius 2-8, count 10-30)
-- MIX SIMPLE + COMPLEX: Combine 2-3 simple algorithms (circles, radial_lines) with 1-2 complex ones
-- CREATE DEPTH: Overlap elements at different positions and scales
-- ADD RANDOMNESS: Use "clustered" scatter, high "variation" in radial_lines, "noise" in grids
+SYSTEM DESIGN RULES:
+- HIERARCHICAL COMPLEXITY: Layer primary structures with secondary details and annotation overlays
+- MULTI-SCALE SYSTEMS: Mix macro frameworks (grids, networks) with micro details (nodes, measurements)
+- ORGANIC DENSITY: Create natural clustering with dense core regions and sparse transition zones
+- TECHNICAL PRECISION: Add measurement systems, coordinate grids, dimensional annotations
+- CONTEXTUAL RELATIONSHIPS: Connect related subsystems with pathways and reference lines
 
-GOOD COMBINATIONS:
-- circles (center [0,0], large) + circles (center [4,-2], small) + radial_lines + scatter
-- grid (with noise) + network + circles (multiple centers) + wave  
-- spiral + circles (concentric) + logarithmic_spiral + scatter
-- radial_lines + circles (small, scattered) + network + grid
+DOMAIN-DRIVEN EXAMPLES:
+CIRCUIT: Dense grid + component clusters (circles at multiple centers) + connection traces (network) + measurement references (radial_lines)
+MOLECULAR: Crystal lattice (grid) + atomic bonds (network) + electron orbitals (circles) + measurement scales (radial_lines)  
+MECHANICAL: Assembly grid + component nodes + stress vectors + dimensional annotations
+BIOLOGICAL: Growth framework + cellular clusters + connection pathways + measurement scales
+
+Each system should have 3-5 layers working together as an integrated technical diagram.
 
 Return ONLY the JSON - no explanations.`;
 
@@ -235,7 +236,7 @@ Return ONLY the JSON - no explanations.`;
     } catch (parseError) {
       console.error('Algorithm JSON parsing failed:', parseError);
       console.error('Raw response:', generatedText);
-      
+
       // IMPROVED: Better fallback with variation
       console.warn('Using improved fallback algorithm set');
       algorithmData = {
@@ -284,18 +285,18 @@ Return ONLY the JSON - no explanations.`;
         console.warn('Filtering invalid algorithm:', alg);
         return false;
       }
-      
+
       // Check if algorithm type exists in our generators
       const validTypes = [
         'grid', 'circles', 'radial_lines', 'network', 'spiral', 'wave', 'scatter',
         'logarithmic_spiral'
       ];
-      
+
       if (!validTypes.includes(alg.type)) {
         console.warn(`Unknown algorithm type: ${alg.type}, filtering out`);
         return false;
       }
-      
+
       return true;
     });
 
@@ -326,12 +327,12 @@ const enhancedAlgorithmGenerators = {
 
       // Add some randomization to make each generation unique
       const actualCount = count + Math.floor((Math.random() - 0.5) * 4);
-      
+
       for (let i = 0; i < actualCount; i++) {
         const radius = minRadius + (maxRadius - minRadius) * (i / actualCount);
         const points = [];
         const segments = Math.max(16, Math.min(64, Math.floor(radius * 10)));
-        
+
         // Add organic variation for some circles
         const variation = (style === "organic" || Math.random() < 0.2) ? 0.05 : 0;
 
