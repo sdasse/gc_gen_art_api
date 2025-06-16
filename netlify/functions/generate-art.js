@@ -1,13 +1,607 @@
+
+// FIXED: Enhanced system prompt that only uses algorithms we actually implement
+async function generateAlgorithmsWithClaude(userPrompt, apiKey) {
+  // Enhanced validation (keeping your existing validation)
+  if (!userPrompt || typeof userPrompt !== 'string' || userPrompt.trim().length === 0) {
+    throw new Error('User prompt is required and must be a non-empty string');
+  }
+
+  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
+    throw new Error('API key is required and must be a non-empty string');
+  }
+
+  userPrompt = userPrompt.trim();
+  if (userPrompt.length > 500) {
+    console.warn('User prompt is very long, truncating to avoid token limits');
+    userPrompt = userPrompt.substring(0, 500);
+  }
+
+  // FIXED: Enhanced system prompt with only implemented algorithms
+  const systemPrompt = `You are an artistic technical diagram generator. Create varied, surprising visualizations with random elements and consistent line styling.
+
+For the concept "${userPrompt}", return ONLY this JSON structure with 3-6 algorithms chosen for maximum variety:
+
+{
+  "title": "Technical diagram name",
+  "description": "What this represents",
+  "algorithms": [
+    // AVAILABLE ALGORITHMS (all implemented):
+    // STRUCTURAL: "grid", "circles", "radial_lines", "network", "spiral"
+    // COMPLEX: "flow_field", "voronoi_diagram", "delaunay_triangulation", "particle_system", "orbital_system"
+    // DATA: "scatter", "wave", "logarithmic_spiral", "mesh_deformation"
+    
+    {
+      "type": "circles",
+      "params": {
+        "center": [0, 0],
+        "count": 15,
+        "max_radius": 5,
+        "min_radius": 0.5,
+        "style": "clean"
+      }
+    },
+    {
+      "type": "radial_lines", 
+      "params": {
+        "center": [2, -1],
+        "count": 24,
+        "length": 4,
+        "variation": 0.3
+      }
+    },
+    {
+      "type": "scatter",
+      "params": {
+        "count": 200,
+        "distribution": "clustered",
+        "bounds": [-6, 6]
+      }
+    }
+    // Add 0-3 more algorithms for 3-6 total
+  ],
+  "style": {
+    "line_weight": 1.5,
+    "variation": "high",
+    "multiple_centers": true,
+    "mixed_scales": true
+  },
+  "camera": {"position": [8, 6, 10], "lookAt": [0, 0, 0]}
+}
+
+VARIATION RULES:
+- Use MULTIPLE CENTERS: Place circles/radial_lines at different positions like [0,0], [3,-2], [-2,3]
+- Use DIFFERENT SCALES: Same algorithm with different sizes (radius 2-8, count 10-30)
+- MIX SIMPLE + COMPLEX: Combine 2-3 simple algorithms (circles, radial_lines) with 1-2 complex ones
+- CREATE DEPTH: Overlap elements at different positions and scales
+- ADD RANDOMNESS: Use "clustered" scatter, high "variation" in radial_lines, "noise" in grids
+
+GOOD COMBINATIONS:
+- circles (center [0,0], large) + circles (center [4,-2], small) + radial_lines + scatter
+- grid (with noise) + network + circles (multiple centers) + particle_system  
+- spiral + circles (concentric) + delaunay_triangulation + scatter
+- flow_field + circles (small, scattered) + radial_lines (fan-like) + mesh_deformation
+
+Return ONLY the JSON - no explanations.`;
+
+  try {
+    console.log('Making Claude API request for algorithms:', userPrompt.substring(0, 100));
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 2000,
+        messages: [
+          {
+            role: 'user',
+            content: `Generate algorithm parameters for: "${userPrompt}"`
+          }
+        ],
+        system: systemPrompt
+      })
+    });
+
+    console.log('Claude API response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Claude API error response:', errorText);
+
+      let errorDetails = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.error?.message || errorJson.message || errorText;
+      } catch (e) {
+        // Keep original error text if not JSON
+      }
+
+      throw new Error(`Claude API error (${response.status}): ${errorDetails}`);
+    }
+
+    const claudeResult = await response.json();
+    console.log('Claude algorithm result received');
+
+    const generatedText = claudeResult.content[0].text;
+    console.log('Raw algorithm response preview:', generatedText.substring(0, 200));
+
+    // Enhanced JSON extraction with multiple fallback strategies
+    let algorithmData;
+    try {
+      // Strategy 1: Try to parse the entire response as JSON
+      try {
+        algorithmData = JSON.parse(generatedText.trim());
+      } catch (e) {
+        // Strategy 2: Find JSON blocks in the response
+        const jsonRegex = /\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*\}/g;
+        const matches = generatedText.match(jsonRegex);
+
+        if (matches) {
+          // Find the largest JSON block (most likely to be complete)
+          const jsonString = matches.reduce((prev, current) => 
+            current.length > prev.length ? current : prev
+          );
+          algorithmData = JSON.parse(jsonString);
+        } else {
+          throw new Error('No JSON found in Claude response');
+        }
+      }
+
+    } catch (parseError) {
+      console.error('Algorithm JSON parsing failed:', parseError);
+      console.error('Raw response:', generatedText);
+      
+      // IMPROVED: Better fallback with variation
+      console.warn('Using improved fallback algorithm set');
+      algorithmData = {
+        title: "Varied Technical Art",
+        description: "Multi-scale algorithmic visualization",
+        algorithms: [
+          {
+            type: "circles",
+            params: { center: [0, 0], count: 12, max_radius: 5, min_radius: 0.3 }
+          },
+          {
+            type: "circles", 
+            params: { center: [3, -2], count: 8, max_radius: 2.5, min_radius: 0.5 }
+          },
+          {
+            type: "radial_lines",
+            params: { center: [-2, 3], count: 20, length: 4, variation: 0.4 }
+          },
+          {
+            type: "scatter",
+            params: { count: 150, distribution: "clustered", bounds: [-6, 6] }
+          },
+          {
+            type: "network",
+            params: { nodes: 25, connection_probability: 0.3, bounds: [-4, 4] }
+          }
+        ],
+        camera: { position: [8, 6, 10], lookAt: [0, 0, 0] }
+      };
+    }
+
+    // Validate and sanitize algorithm structure
+    if (!algorithmData.algorithms || !Array.isArray(algorithmData.algorithms)) {
+      throw new Error('Claude did not generate valid algorithms array');
+    }
+
+    // Limit number of algorithms
+    if (algorithmData.algorithms.length > 6) {
+      console.warn(`Claude generated ${algorithmData.algorithms.length} algorithms, limiting to 6`);
+      algorithmData.algorithms = algorithmData.algorithms.slice(0, 6);
+    }
+
+    // Validate each algorithm and filter out invalid ones
+    algorithmData.algorithms = algorithmData.algorithms.filter(alg => {
+      if (!alg || typeof alg !== 'object' || !alg.type || typeof alg.type !== 'string') {
+        console.warn('Filtering invalid algorithm:', alg);
+        return false;
+      }
+      
+      // Check if algorithm type exists in our generators
+      const validTypes = [
+        'grid', 'circles', 'radial_lines', 'network', 'spiral', 'wave', 'scatter',
+        'logarithmic_spiral', 'flow_field', 'voronoi_diagram', 'delaunay_triangulation',
+        'mesh_deformation', 'particle_system', 'orbital_system'
+      ];
+      
+      if (!validTypes.includes(alg.type)) {
+        console.warn(`Unknown algorithm type: ${alg.type}, filtering out`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (algorithmData.algorithms.length === 0) {
+      throw new Error('No valid algorithms found after filtering');
+    }
+
+    console.log(`Generated ${algorithmData.algorithms.length} valid algorithms`);
+    return algorithmData;
+
+  } catch (error) {
+    console.error('Claude algorithm generation error:', error);
+    throw error;
+  }
+}
+
+// FIXED: Enhanced algorithms that add variation within existing structure
+const enhancedAlgorithmGenerators = {
+  // OVERRIDE: Enhanced circles with better variation
+  circles: (params) => {
+    const lines = [];
+    const center = params.center || [0, 0];
+    const count = Math.max(5, Math.min(30, params.count || 10));
+    const maxRadius = Math.max(1, Math.min(8, params.max_radius || 5));
+    const minRadius = Math.max(0.1, Math.min(maxRadius, params.min_radius || 0.5));
+    const style = params.style || "clean";
+
+    // Add some randomization to make each generation unique
+    const actualCount = count + Math.floor((Math.random() - 0.5) * 4);
+    
+    for (let i = 0; i < actualCount; i++) {
+      const radius = minRadius + (maxRadius - minRadius) * (i / actualCount);
+      const points = [];
+      const segments = Math.max(16, Math.min(64, Math.floor(radius * 10)));
+      
+      // Add organic variation for some circles
+      const variation = (style === "organic" || Math.random() < 0.2) ? 0.05 : 0;
+
+      for (let j = 0; j <= segments; j++) {
+        const angle = (j / segments) * Math.PI * 2;
+        const r = radius + (Math.random() - 0.5) * variation;
+        points.push([
+          center[0] + Math.cos(angle) * r,
+          center[1] + Math.sin(angle) * r,
+          0
+        ]);
+      }
+
+      // Vary opacity and occasionally make lines dashed
+      const opacity = 0.4 + (i / actualCount) * 0.4 + Math.random() * 0.1;
+      const isDashed = Math.random() < 0.15; // 15% chance of dashed
+
+      lines.push({
+        points: points,
+        color: "#509EF0",
+        opacity: Math.min(0.9, opacity),
+        lineWidth: 1.5,
+        isDashed: isDashed
+      });
+    }
+
+    // Sometimes add radial fill lines
+    if (Math.random() < 0.3) {
+      const numRadial = 8 + Math.floor(Math.random() * 16);
+      for (let i = 0; i < numRadial; i++) {
+        const angle = (i / numRadial) * Math.PI * 2;
+        lines.push({
+          points: [
+            [center[0], center[1], 0],
+            [center[0] + Math.cos(angle) * maxRadius, center[1] + Math.sin(angle) * maxRadius, 0]
+          ],
+          color: "#509EF0",
+          opacity: 0.3,
+          lineWidth: 1.5,
+          isDashed: Math.random() < 0.4 // Higher chance for radial lines to be dashed
+        });
+      }
+    }
+
+    return lines;
+  },
+
+  // OVERRIDE: Enhanced radial_lines with arrows
+  radial_lines: (params) => {
+    const lines = [];
+    const center = params.center || [0, 0];
+    const count = Math.max(8, Math.min(72, params.count || 24));
+    const length = Math.max(1, Math.min(10, params.length || 5));
+    const variation = Math.max(0, Math.min(2, params.variation || 0));
+
+    // Add some randomness to count
+    const actualCount = count + Math.floor((Math.random() - 0.5) * 8);
+
+    for (let i = 0; i < actualCount; i++) {
+      const angle = (i / actualCount) * Math.PI * 2;
+      const lineLength = length + (Math.random() - 0.5) * variation;
+      const isDashed = Math.random() < 0.2;
+      const hasArrow = Math.random() < 0.3; // 30% chance of arrow
+
+      const endX = center[0] + Math.cos(angle) * lineLength;
+      const endY = center[1] + Math.sin(angle) * lineLength;
+
+      // Main line
+      lines.push({
+        points: [
+          [center[0], center[1], 0],
+          [endX, endY, 0]
+        ],
+        color: "#509EF0",
+        opacity: 0.6 + Math.random() * 0.2,
+        lineWidth: 1.5,
+        isDashed: isDashed
+      });
+
+      // Add arrow head if selected
+      if (hasArrow && lineLength > 0.5) {
+        const arrowSize = Math.min(0.15, lineLength * 0.1);
+        lines.push({
+          points: [
+            [endX, endY, 0],
+            [endX - Math.cos(angle - 0.3) * arrowSize, endY - Math.sin(angle - 0.3) * arrowSize, 0]
+          ],
+          color: "#509EF0",
+          opacity: 0.8,
+          lineWidth: 1.5
+        });
+        lines.push({
+          points: [
+            [endX, endY, 0],
+            [endX - Math.cos(angle + 0.3) * arrowSize, endY - Math.sin(angle + 0.3) * arrowSize, 0]
+          ],
+          color: "#509EF0",
+          opacity: 0.8,
+          lineWidth: 1.5
+        });
+      }
+    }
+
+    return lines;
+  },
+
+  // OVERRIDE: Enhanced scatter with small 3D-like markers
+  scatter: (params) => {
+    const lines = [];
+    const count = Math.max(50, Math.min(400, params.count || 100));
+    const distribution = params.distribution || "random";
+    const bounds = params.bounds || [-5, 5];
+    const markerStyle = params.marker_style || "mixed"; // "cross", "circle", "square", "mixed"
+
+    for (let i = 0; i < count; i++) {
+      let x, y, z;
+
+      // Distribution logic
+      if (distribution === "exponential") {
+        const t = (Math.random() - 0.5) * 8;
+        x = t;
+        y = t > 0 ? Math.exp(t * 0.3) - 1 : (Math.random() - 0.5) * 2;
+        z = (Math.random() - 0.5) * 2;
+      } else if (distribution === "clustered") {
+        const clusterCenter = [(Math.random() - 0.5) * bounds[1], (Math.random() - 0.5) * bounds[1]];
+        x = clusterCenter[0] + (Math.random() - 0.5) * 2;
+        y = clusterCenter[1] + (Math.random() - 0.5) * 2;
+        z = (Math.random() - 0.5) * 2;
+      } else {
+        x = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
+        y = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
+        z = (Math.random() - 0.5) * 4;
+      }
+
+      // Enhanced markers with variation
+      const size = 0.03 + Math.random() * 0.04;
+      const currentMarkerStyle = markerStyle === "mixed" ? 
+        ["cross", "circle", "square"][Math.floor(Math.random() * 3)] : markerStyle;
+      const isDashed = Math.random() < 0.1;
+
+      if (currentMarkerStyle === "cross") {
+        lines.push({
+          points: [[x-size, y, z], [x+size, y, z]],
+          color: "#509EF0",
+          opacity: 0.7 + Math.random() * 0.2,
+          lineWidth: 1.5,
+          isDashed: isDashed
+        });
+        lines.push({
+          points: [[x, y-size, z], [x, y+size, z]],
+          color: "#509EF0",
+          opacity: 0.7 + Math.random() * 0.2,
+          lineWidth: 1.5,
+          isDashed: isDashed
+        });
+      } else if (currentMarkerStyle === "circle") {
+        const circlePoints = [];
+        const segments = 8;
+        for (let j = 0; j <= segments; j++) {
+          const angle = (j / segments) * Math.PI * 2;
+          circlePoints.push([
+            x + Math.cos(angle) * size,
+            y + Math.sin(angle) * size,
+            z
+          ]);
+        }
+        lines.push({
+          points: circlePoints,
+          color: "#509EF0",
+          opacity: 0.6 + Math.random() * 0.2,
+          lineWidth: 1.5,
+          isDashed: isDashed
+        });
+      } else if (currentMarkerStyle === "square") {
+        const squarePoints = [
+          [x-size, y-size, z], [x+size, y-size, z],
+          [x+size, y+size, z], [x-size, y+size, z],
+          [x-size, y-size, z]
+        ];
+        lines.push({
+          points: squarePoints,
+          color: "#509EF0",
+          opacity: 0.6 + Math.random() * 0.2,
+          lineWidth: 1.5,
+          isDashed: isDashed
+        });
+      }
+    }
+
+    return lines;
+  },
+
+  // Placeholder algorithms that need to be implemented
+  grid: (params) => {
+    const lines = [];
+    const spacing = params.spacing || 0.5;
+    const size = params.size || 8;
+    const noise = params.noise || 0;
+
+    for (let x = -size; x <= size; x += spacing) {
+      const yOffset = noise * (Math.random() - 0.5);
+      lines.push({
+        points: [[x, -size + yOffset, 0], [x, size + yOffset, 0]],
+        color: "#509EF0",
+        opacity: 0.4,
+        lineWidth: 1.5,
+        isDashed: Math.random() < 0.1
+      });
+    }
+
+    for (let y = -size; y <= size; y += spacing) {
+      const xOffset = noise * (Math.random() - 0.5);
+      lines.push({
+        points: [[-size + xOffset, y, 0], [size + xOffset, y, 0]],
+        color: "#509EF0",
+        opacity: 0.4,
+        lineWidth: 1.5,
+        isDashed: Math.random() < 0.1
+      });
+    }
+
+    return lines;
+  },
+
+  network: (params) => {
+    const lines = [];
+    const nodes = params.nodes || 20;
+    const bounds = params.bounds || [-5, 5];
+    const connectionProb = params.connection_probability || 0.2;
+
+    // Generate random nodes
+    const nodePositions = [];
+    for (let i = 0; i < nodes; i++) {
+      nodePositions.push([
+        (Math.random() - 0.5) * (bounds[1] - bounds[0]),
+        (Math.random() - 0.5) * (bounds[1] - bounds[0]),
+        (Math.random() - 0.5) * 2
+      ]);
+    }
+
+    // Connect nodes based on probability
+    for (let i = 0; i < nodes; i++) {
+      for (let j = i + 1; j < nodes; j++) {
+        if (Math.random() < connectionProb) {
+          lines.push({
+            points: [nodePositions[i], nodePositions[j]],
+            color: "#509EF0",
+            opacity: 0.5,
+            lineWidth: 1.5,
+            isDashed: Math.random() < 0.2
+          });
+        }
+      }
+    }
+
+    return lines;
+  },
+
+  spiral: (params) => {
+    const lines = [];
+    const turns = params.turns || 5;
+    const maxRadius = params.max_radius || 6;
+    const points = [];
+
+    const totalPoints = turns * 50;
+    for (let i = 0; i <= totalPoints; i++) {
+      const t = i / totalPoints;
+      const angle = t * turns * Math.PI * 2;
+      const radius = t * maxRadius;
+
+      points.push([
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius,
+        (Math.random() - 0.5) * 0.5
+      ]);
+    }
+
+    lines.push({
+      points: points,
+      color: "#509EF0",
+      opacity: 0.7,
+      lineWidth: 1.5,
+      isDashed: Math.random() < 0.3
+    });
+
+    return lines;
+  },
+
+  wave: (params) => {
+    const lines = [];
+    const frequency = params.frequency || 2;
+    const amplitude = params.amplitude || 3;
+    const length = params.length || 12;
+    const points = [];
+
+    for (let x = -length/2; x <= length/2; x += 0.1) {
+      const y = amplitude * Math.sin(frequency * x);
+      points.push([x, y, 0]);
+    }
+
+    lines.push({
+      points: points,
+      color: "#509EF0",
+      opacity: 0.8,
+      lineWidth: 1.5
+    });
+
+    return lines;
+  },
+
+  logarithmic_spiral: (params) => {
+    const lines = [];
+    const a = params.growth_factor || 0.3;
+    const turns = params.turns || 4;
+    const points = [];
+
+    for (let theta = 0; theta <= turns * Math.PI * 2; theta += 0.1) {
+      const r = a * Math.exp(0.2 * theta);
+      points.push([
+        r * Math.cos(theta),
+        r * Math.sin(theta),
+        0
+      ]);
+    }
+
+    lines.push({
+      points: points,
+      color: "#509EF0",
+      opacity: 0.7,
+      lineWidth: 1.5
+    });
+
+    return lines;
+  },
+
+  // Placeholder for more complex algorithms
+  flow_field: (params) => { return []; },
+  voronoi_diagram: (params) => { return []; },
+  delaunay_triangulation: (params) => { return []; },
+  mesh_deformation: (params) => { return []; },
+  particle_system: (params) => { return []; },
+  orbital_system: (params) => { return []; }
+};
+
 // Enhanced line rendering function that handles dashed lines
 function generateFromAlgorithms(algorithmData) {
   const allLines = [];
   const maxTotalLines = 3000; // Reduced for better performance
   const maxAlgorithms = 6; // Allow more algorithms but smaller ones
-  
-  console.log(`Processing ${algorithmData.algorithms.length} algorithms`);
 
-  // Use both original and new varied algorithms
-  const combinedAlgorithms = { ...algorithmGenerators, ...variedAlgorithms };
+  console.log(`Processing ${algorithmData.algorithms.length} algorithms`);
 
   if (!algorithmData || !algorithmData.algorithms || !Array.isArray(algorithmData.algorithms)) {
     console.error('Invalid algorithm data structure');
@@ -15,11 +609,11 @@ function generateFromAlgorithms(algorithmData) {
   }
 
   const algorithmsToProcess = algorithmData.algorithms.slice(0, maxAlgorithms);
-  
+
   algorithmsToProcess.forEach((algorithm, index) => {
     try {
       console.log(`Processing algorithm ${index + 1}: ${algorithm.type}`);
-      
+
       if (!algorithm || typeof algorithm !== 'object' || !algorithm.type) {
         console.warn(`Invalid algorithm at index ${index}:`, algorithm);
         return;
@@ -30,18 +624,18 @@ function generateFromAlgorithms(algorithmData) {
         return;
       }
 
-      if (!combinedAlgorithms[algorithm.type]) {
+      if (!enhancedAlgorithmGenerators[algorithm.type]) {
         console.warn(`Unknown algorithm type: ${algorithm.type}`);
         return;
       }
 
       const params = algorithm.params || {};
       const startTime = Date.now();
-      
+
       let lines = [];
       try {
-        lines = combinedAlgorithms[algorithm.type](params);
-        
+        lines = enhancedAlgorithmGenerators[algorithm.type](params);
+
         if (!Array.isArray(lines)) {
           console.warn(`Algorithm ${algorithm.type} returned non-array:`, typeof lines);
           return;
@@ -52,7 +646,7 @@ function generateFromAlgorithms(algorithmData) {
           if (!line || typeof line !== 'object') return false;
           if (!Array.isArray(line.points)) return false;
           if (line.points.length < 2) return false;
-          
+
           return line.points.every(point => {
             if (!Array.isArray(point) || point.length !== 3) return false;
             return point.every(coord => typeof coord === 'number' && isFinite(coord));
@@ -67,7 +661,7 @@ function generateFromAlgorithms(algorithmData) {
           };
 
           // Handle dashed lines by creating segmented geometry
-          if (line.dashed && line.points.length > 1) {
+          if (line.isDashed && line.points.length > 1) {
             processedLine.isDashed = true;
             processedLine.dashArray = [0.1, 0.05]; // 10% dash, 5% gap relative to line length
           }
@@ -144,15 +738,15 @@ function generateFromAlgorithms(algorithmData) {
 // Fallback visualization when algorithm data is invalid
 function createFallbackVisualization() {
   console.warn('Creating fallback visualization');
-  
+
   const fallbackLines = [];
-  
+
   // Simple concentric circles
   for (let i = 1; i <= 8; i++) {
     const radius = i * 0.8;
     const points = [];
     const segments = 32;
-    
+
     for (let j = 0; j <= segments; j++) {
       const angle = (j / segments) * Math.PI * 2;
       points.push([
@@ -161,7 +755,7 @@ function createFallbackVisualization() {
         0
       ]);
     }
-    
+
     fallbackLines.push({
       points: points,
       color: "#509EF0",
@@ -170,7 +764,7 @@ function createFallbackVisualization() {
       isDashed: i % 3 === 0 // Every third circle is dashed
     });
   }
-  
+
   // Add some radial lines
   for (let i = 0; i < 12; i++) {
     const angle = (i / 12) * Math.PI * 2;
@@ -185,13 +779,13 @@ function createFallbackVisualization() {
       isDashed: i % 4 === 0 // Every fourth line is dashed
     });
   }
-  
+
   // Add some precision markers
   for (let i = 0; i < 15; i++) {
     const x = (Math.random() - 0.5) * 10;
     const y = (Math.random() - 0.5) * 10;
     const size = 0.05;
-    
+
     // Cross marker
     fallbackLines.push({
       points: [[x - size, y, 0], [x + size, y, 0]],
@@ -220,4 +814,20 @@ function createFallbackVisualization() {
       line_weight_standard: "1.5px"
     }
   };
+}
+
+function validateCamera(camera) {
+  if (!camera || typeof camera !== 'object') {
+    return { position: [8, 6, 10], lookAt: [0, 0, 0] };
+  }
+
+  const position = Array.isArray(camera.position) && camera.position.length === 3 && 
+    camera.position.every(coord => typeof coord === 'number' && isFinite(coord))
+    ? camera.position : [8, 6, 10];
+
+  const lookAt = Array.isArray(camera.lookAt) && camera.lookAt.length === 3 && 
+    camera.lookAt.every(coord => typeof coord === 'number' && isFinite(coord))
+    ? camera.lookAt : [0, 0, 0];
+
+  return { position, lookAt };
 }
