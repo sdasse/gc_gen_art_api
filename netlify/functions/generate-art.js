@@ -1,4 +1,79 @@
 
+// Enhanced API handler for generating art using Claude with varied composition approach
+exports.handler = async (event, context) => {
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: ''
+    };
+  }
+
+  try {
+    console.log('Generate art function called');
+
+    const body = JSON.parse(event.body || '{}');
+    const { prompt } = body;
+
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      return {
+        statusCode: 400,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ error: 'Prompt is required' })
+      };
+    }
+
+    const claudeApiKey = process.env.ANTHROPIC_API_KEY;
+    if (!claudeApiKey) {
+      return {
+        statusCode: 500,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ 
+          error: 'Claude API key not configured. Please set ANTHROPIC_API_KEY environment variable.' 
+        })
+      };
+    }
+
+    // Use enhanced Claude generation
+    const algorithmData = await generateAlgorithmsWithClaude(prompt.trim(), claudeApiKey);
+    const artData = generateFromAlgorithms(algorithmData);
+    
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(artData)
+    };
+
+  } catch (error) {
+    console.error('Generation error:', error);
+
+    return {
+      statusCode: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ 
+        error: `Generation failed: ${error.message}`,
+        details: error.stack || 'No additional details available'
+      })
+    };
+  }
+};
 
 // FIXED: Enhanced system prompt that only uses algorithms we actually implement
 async function generateAlgorithmsWithClaude(userPrompt, apiKey) {
@@ -887,4 +962,3 @@ function validateCamera(camera) {
     return { position: [8, 6, 10], lookAt: [0, 0, 0] };
   }
 }
-
