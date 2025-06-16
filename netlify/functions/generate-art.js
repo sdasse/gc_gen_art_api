@@ -87,42 +87,20 @@ exports.handler = async (event, context) => {
 };
 
 async function generateWithClaude(userPrompt, apiKey) {
-  const systemPrompt = `Create sophisticated 3D line art in monochromatic blue (#509EF0). 
+  const systemPrompt = `Create sophisticated 3D line art in blue (#509EF0). Generate 200-500 lines using coordinates -8 to +8. Be wildly creative - use any visual approach that captures the concept: organic forms, geometric structures, networks, patterns, technical diagrams, or abstract compositions. Layer multiple systems for complexity.
 
-CORE AESTHETIC:
-- Complex layered systems with 200-600+ lines
-- Use full 3D space: coordinates -8 to +8
-- Keep consistent opacity at 1.0 and lineWidth 1.5
-- Layer multiple visual systems at different Z-depths
-
-CREATIVE FREEDOM:
-Interpret "${userPrompt}" through ANY of these approaches:
-- Organic spirals, flowing ribbons, growth patterns
-- Geometric clusters, architectural frameworks, modular grids  
-- Particle systems, scattered constellations, point clouds
-- Network graphs, connection webs, branching trees
-- Mathematical surfaces, parametric curves, fractals
-- Technical diagrams, wiring diagrams, measurement grids
-- Abstract compositions, rhythmic patterns, visual music
-
-MIX AND LAYER multiple approaches for complexity. Think beyond literal representation - what visual essence captures this concept?
-
-ALWAYS return ONLY this JSON structure:
+Return ONLY this JSON:
 {
   "title": "Creative title",
   "description": "Brief description", 
   "complexity_level": "high",
-  "lines": [
-    {"points": [[x,y,z], [x,y,z], ...], "color": "#509EF0", "opacity": 0.8, "lineWidth": 1.5}
-  ],
+  "lines": [{"points": [[x,y,z], [x,y,z], ...], "color": "#509EF0", "opacity": 1.0, "lineWidth": 1.5}],
   "camera": {"position": [0, 0, 12], "lookAt": [0, 0, 0]}
-}
-
-Be wildly creative while maintaining the sophisticated blue monochromatic aesthetic.`;
+}`;
 
   try {
     console.log('Making Claude API request...');
-    
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -131,16 +109,12 @@ Be wildly creative while maintaining the sophisticated blue monochromatic aesthe
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 4000,
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 8000,
         messages: [
           {
             role: 'user',
-            content: `Create a sophisticated 3D line art visualization for: "${userPrompt}"
-
-Generate a complex, creative interpretation using 300-600 lines. Layer multiple visual systems for depth and complexity. Use the full 3D coordinate space (-8 to +8). 
-
-Think creatively about what visual forms could represent this concept - don't be literal, be expressive and artistic while maintaining technical sophistication.`
+            content: `Create 3D line art for: "${userPrompt}"`
           }
         ],
         system: systemPrompt
@@ -157,7 +131,7 @@ Think creatively about what visual forms could represent this concept - don't be
 
     const claudeResult = await response.json();
     console.log('Claude result received, content length:', claudeResult.content?.[0]?.text?.length);
-    
+
     const generatedText = claudeResult.content[0].text;
 
     // Extract JSON from Claude's response
@@ -198,7 +172,7 @@ Think creatively about what visual forms could represent this concept - don't be
 
   } catch (error) {
     console.error('Claude API error details:', error);
-    
+
     // Provide detailed error information
     if (error.message.includes('fetch')) {
       throw new Error(`Network error connecting to Claude API: ${error.message}`);
