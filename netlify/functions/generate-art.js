@@ -1,4 +1,3 @@
-
 // API handler for generating complex artistic systems using Claude
 exports.handler = async (event, context) => {
   // Handle CORS preflight
@@ -61,8 +60,10 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Use Claude to generate complex artistic systems
-    const artData = await generateWithClaude(prompt.trim(), claudeApiKey);
+    // Use Claude to generate algorithms, then convert to lines
+    const algorithmData = await generateAlgorithmsWithClaude(prompt.trim(), claudeApiKey);
+    const artData = generateFromAlgorithms(algorithmData);
+    
     return {
       statusCode: 200,
       headers: {
@@ -86,7 +87,7 @@ exports.handler = async (event, context) => {
   }
 };
 
-async function generateWithClaude(userPrompt, apiKey) {
+async function generateAlgorithmsWithClaude(userPrompt, apiKey) {
   // Add request validation
   if (!userPrompt || userPrompt.trim().length === 0) {
     throw new Error('User prompt is required');
@@ -102,29 +103,85 @@ async function generateWithClaude(userPrompt, apiKey) {
     userPrompt = userPrompt.substring(0, 500);
   }
 
-  // Optimized system prompt for Claude 3.5 Sonnet
-  const systemPrompt = `You are a sophisticated 3D line art generator. Create complex, artistic line drawings in monochromatic blue (#509EF0).
+  // Algorithm-based system prompt
+  const systemPrompt = `You are a Three.js algorithm generator for complex technical line art. Instead of generating coordinates, create algorithms that generate sophisticated diagrams.
 
-REQUIREMENTS:
-- Generate 200-500 lines using coordinates from -8 to +8
-- Use any creative approach: organic forms, geometric structures, networks, patterns, technical diagrams, or abstract compositions
-- Layer multiple visual systems for complexity and depth
-- All lines must use color "#509EF0", opacity 1.0, lineWidth 1.5
+For the concept "${userPrompt}", return ONLY this JSON structure:
 
-OUTPUT FORMAT:
-Return ONLY valid JSON in this exact structure:
 {
-  "title": "Creative title",
-  "description": "Brief description", 
-  "complexity_level": "high",
-  "lines": [{"points": [[x,y,z], [x,y,z], ...], "color": "#509EF0", "opacity": 1.0, "lineWidth": 1.5}],
-  "camera": {"position": [0, 0, 12], "lookAt": [0, 0, 0]}
+  "title": "Technical diagram name",
+  "description": "What this represents",
+  "algorithms": [
+    {
+      "type": "grid",
+      "params": {
+        "spacing": 0.2,
+        "size": 12,
+        "z_layers": 3,
+        "noise": 0.1
+      }
+    },
+    {
+      "type": "circles",
+      "params": {
+        "center": [0, 0],
+        "count": 30,
+        "max_radius": 8,
+        "min_radius": 0.5
+      }
+    },
+    {
+      "type": "radial_lines",
+      "params": {
+        "center": [0, 0],
+        "count": 72,
+        "length": 8,
+        "variation": 0.2
+      }
+    },
+    {
+      "type": "network",
+      "params": {
+        "nodes": 60,
+        "connection_probability": 0.25,
+        "bounds": [-6, 6]
+      }
+    },
+    {
+      "type": "spiral",
+      "params": {
+        "count": 8,
+        "turns": 4,
+        "radius_start": 0.5,
+        "radius_end": 6,
+        "height_variation": 3
+      }
+    },
+    {
+      "type": "wave",
+      "params": {
+        "frequency": 3,
+        "amplitude": 4,
+        "segments": 120,
+        "harmonics": 4
+      }
+    },
+    {
+      "type": "scatter",
+      "params": {
+        "count": 200,
+        "distribution": "clustered",
+        "bounds": [-7, 7]
+      }
+    }
+  ],
+  "camera": {"position": [8, 6, 10], "lookAt": [0, 0, 0]}
 }
 
-Do not include any explanatory text, code blocks, or markdown. Return only the JSON object.`;
+CHOOSE 3-5 APPROPRIATE ALGORITHMS based on the concept. Use high counts for visual complexity. Return ONLY the JSON - no explanations.`;
 
   try {
-    console.log('Making Claude API request for prompt:', userPrompt.substring(0, 100));
+    console.log('Making Claude API request for algorithms:', userPrompt.substring(0, 100));
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -135,11 +192,11 @@ Do not include any explanatory text, code blocks, or markdown. Return only the J
       },
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 8000,
+        max_tokens: 2000, // Much smaller since we're not generating coordinates
         messages: [
           {
             role: 'user',
-            content: `Create 3D line art for: "${userPrompt}"`
+            content: `Generate algorithm parameters for: "${userPrompt}"`
           }
         ],
         system: systemPrompt
@@ -147,7 +204,6 @@ Do not include any explanatory text, code blocks, or markdown. Return only the J
     });
 
     console.log('Claude API response status:', response.status);
-    console.log('Claude API response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -165,147 +221,344 @@ Do not include any explanatory text, code blocks, or markdown. Return only the J
     }
 
     const claudeResult = await response.json();
-    console.log('Claude result received');
-    console.log('Response structure:', Object.keys(claudeResult));
-    console.log('Content length:', claudeResult.content?.[0]?.text?.length);
-    console.log('Usage:', claudeResult.usage);
+    console.log('Claude algorithm result received');
 
-    // Validate Claude response structure
-    if (!claudeResult.content || !Array.isArray(claudeResult.content) || claudeResult.content.length === 0) {
-      console.error('Invalid Claude response structure:', claudeResult);
-      throw new Error('Claude returned invalid response structure');
-    }
-    
     const generatedText = claudeResult.content[0].text;
-    
-    // Validate response size
-    if (!generatedText || generatedText.trim().length === 0) {
-      throw new Error('Claude returned empty response');
-    }
-    
-    if (generatedText.length > 50000) {
-      console.warn('Claude response is very large:', generatedText.length, 'characters');
-    }
-    
-    console.log('Raw Claude response preview:', generatedText.substring(0, 200));
+    console.log('Raw algorithm response preview:', generatedText.substring(0, 200));
 
-    // Extract JSON from Claude's response with better parsing
-    let artData;
+    // Extract JSON from Claude's response
+    let algorithmData;
     try {
-      // Try multiple extraction methods
-      let jsonString = null;
-      
-      // Method 1: Look for complete JSON objects with proper nesting
+      // Try to find JSON in the response
       const jsonRegex = /\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*\}/g;
       const matches = generatedText.match(jsonRegex);
       
       if (matches) {
-        // Find the largest JSON object (likely the complete response)
-        jsonString = matches.reduce((prev, current) => 
+        const jsonString = matches.reduce((prev, current) => 
           current.length > prev.length ? current : prev
         );
+        algorithmData = JSON.parse(jsonString);
+      } else {
+        throw new Error('No JSON found in Claude response');
       }
-      
-      // Method 2: Look for JSON between code blocks
-      if (!jsonString) {
-        const codeBlockMatch = generatedText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-        if (codeBlockMatch) {
-          jsonString = codeBlockMatch[1];
-        }
-      }
-      
-      // Method 3: Find JSON after specific markers
-      if (!jsonString) {
-        const markerPatterns = [
-          /(?:return|output|result|json)[\s:]*(\{[\s\S]*?\})/i,
-          /(\{[\s\S]*"lines"[\s\S]*?\})/
-        ];
-        
-        for (const pattern of markerPatterns) {
-          const match = generatedText.match(pattern);
-          if (match) {
-            jsonString = match[1];
-            break;
-          }
-        }
-      }
-      
-      if (!jsonString) {
-        throw new Error('No valid JSON structure found in response');
-      }
-      
-      // Clean up the JSON string
-      jsonString = jsonString.trim();
-      
-      // Parse the JSON
-      artData = JSON.parse(jsonString);
       
     } catch (parseError) {
-      console.error('JSON parsing failed:', parseError);
+      console.error('Algorithm JSON parsing failed:', parseError);
       console.error('Raw response:', generatedText);
-      throw new Error(`Failed to parse JSON from Claude response: ${parseError.message}. Raw response: ${generatedText.substring(0, 500)}...`);
+      throw new Error(`Failed to parse algorithm JSON: ${parseError.message}`);
     }
 
-      // Validate structure
-      if (!artData.lines || !Array.isArray(artData.lines)) {
-        throw new Error('Claude did not generate valid lines array');
-      }
-
-      // Ensure monochromatic blue and clean up any malformed lines
-      artData.lines = artData.lines.filter(line => 
-        line.points && Array.isArray(line.points) && line.points.length >= 2
-      ).map(line => ({
-        ...line,
-        color: "#509EF0"
-      }));
-
-      // Set camera if missing
-      if (!artData.camera) {
-        artData.camera = { position: [0, 0, 12], lookAt: [0, 0, 0] };
-      }
-
-      console.log(`Generated ${artData.lines.length} lines`);
-
-      // Add response validation and debugging info
-      console.log(`Successfully parsed ${artData.lines.length} lines`);
-      console.log('Camera settings:', artData.camera);
-      console.log('Sample line structure:', artData.lines[0]);
-      
-      // Validate minimum complexity but be more flexible
-      if (artData.lines.length < 30) {
-        console.warn(`Low complexity generated (${artData.lines.length} lines), but proceeding`);
-      }
-      
-      // Add metadata for debugging
-      artData.metadata = {
-        generated_at: new Date().toISOString(),
-        prompt: userPrompt,
-        lines_count: artData.lines.length,
-        response_length: generatedText.length
-      };
-
-      return artData;
-    } else {
-      console.error('Could not extract JSON from response:', generatedText);
-      throw new Error(`Could not parse JSON from Claude response. Response: ${generatedText.substring(0, 500)}...`);
+    // Validate algorithm structure
+    if (!algorithmData.algorithms || !Array.isArray(algorithmData.algorithms)) {
+      throw new Error('Claude did not generate valid algorithms array');
     }
+
+    console.log(`Generated ${algorithmData.algorithms.length} algorithms`);
+    return algorithmData;
 
   } catch (error) {
-    console.error('Claude API error details:', error);
-    console.error('Error stack:', error.stack);
-
-    // Preserve original error context while providing helpful information
-    if (error.message.includes('fetch') || error.name === 'TypeError') {
-      throw new Error(`Network error connecting to Claude API: ${error.message}. Check internet connection and API endpoint.`);
-    } else if (error.message.includes('JSON') || error.name === 'SyntaxError') {
-      throw new Error(`Claude returned malformed JSON: ${error.message}. This may indicate a token limit or formatting issue.`);
-    } else if (error.message.includes('Claude API error')) {
-      // Re-throw Claude API errors with full context
-      throw error;
-    } else if (error.message.includes('No valid JSON structure found')) {
-      throw new Error(`Claude response parsing failed: ${error.message}. The AI may have returned explanatory text instead of pure JSON.`);
-    } else {
-      throw new Error(`Unexpected error during Claude API call: ${error.message}. Full error: ${error.stack || error.toString()}`);
-    }
+    console.error('Claude algorithm generation error:', error);
+    throw error;
   }
+}
+
+// Algorithm generators that create the actual lines
+const algorithmGenerators = {
+  grid: (params) => {
+    const lines = [];
+    const halfSize = params.size / 2;
+    const spacing = params.spacing || 0.5;
+    const layers = params.z_layers || 1;
+    const noise = params.noise || 0;
+    
+    for (let layer = 0; layer < layers; layer++) {
+      const z = (layer - layers/2) * 2;
+      
+      // Horizontal lines
+      for (let y = -halfSize; y <= halfSize; y += spacing) {
+        const points = [];
+        for (let x = -halfSize; x <= halfSize; x += spacing/3) {
+          const noiseY = y + (Math.random() - 0.5) * noise;
+          const noiseZ = z + (Math.random() - 0.5) * noise * 0.5;
+          points.push([x, noiseY, noiseZ]);
+        }
+        lines.push({
+          points: points,
+          color: "#509EF0",
+          opacity: 0.4 + layer * 0.1,
+          lineWidth: 1.5
+        });
+      }
+      
+      // Vertical lines
+      for (let x = -halfSize; x <= halfSize; x += spacing) {
+        const points = [];
+        for (let y = -halfSize; y <= halfSize; y += spacing/3) {
+          const noiseX = x + (Math.random() - 0.5) * noise;
+          const noiseZ = z + (Math.random() - 0.5) * noise * 0.5;
+          points.push([noiseX, y, noiseZ]);
+        }
+        lines.push({
+          points: points,
+          color: "#509EF0",
+          opacity: 0.4 + layer * 0.1,
+          lineWidth: 1.5
+        });
+      }
+    }
+    return lines;
+  },
+
+  circles: (params) => {
+    const lines = [];
+    const center = params.center || [0, 0];
+    const count = params.count || 10;
+    const maxRadius = params.max_radius || 5;
+    const minRadius = params.min_radius || 0.5;
+    
+    for (let i = 0; i < count; i++) {
+      const radius = minRadius + (maxRadius - minRadius) * (i / count);
+      const points = [];
+      const segments = 64;
+      
+      for (let j = 0; j <= segments; j++) {
+        const angle = (j / segments) * Math.PI * 2;
+        points.push([
+          center[0] + Math.cos(angle) * radius,
+          center[1] + Math.sin(angle) * radius,
+          0
+        ]);
+      }
+      
+      lines.push({
+        points: points,
+        color: "#509EF0",
+        opacity: 0.6 + (i / count) * 0.3,
+        lineWidth: 1.5
+      });
+    }
+    return lines;
+  },
+
+  radial_lines: (params) => {
+    const lines = [];
+    const center = params.center || [0, 0];
+    const count = params.count || 24;
+    const length = params.length || 5;
+    const variation = params.variation || 0;
+    
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const lineLength = length + (Math.random() - 0.5) * variation;
+      
+      lines.push({
+        points: [
+          [center[0], center[1], 0],
+          [
+            center[0] + Math.cos(angle) * lineLength,
+            center[1] + Math.sin(angle) * lineLength,
+            0
+          ]
+        ],
+        color: "#509EF0",
+        opacity: 0.6,
+        lineWidth: 1.5
+      });
+    }
+    return lines;
+  },
+
+  network: (params) => {
+    const lines = [];
+    const nodes = [];
+    const nodeCount = params.nodes || 20;
+    const connectionProb = params.connection_probability || 0.3;
+    const bounds = params.bounds || [-5, 5];
+    
+    // Generate nodes
+    for (let i = 0; i < nodeCount; i++) {
+      nodes.push([
+        (Math.random() - 0.5) * (bounds[1] - bounds[0]),
+        (Math.random() - 0.5) * (bounds[1] - bounds[0]),
+        (Math.random() - 0.5) * 4
+      ]);
+    }
+    
+    // Connect nodes
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (Math.random() < connectionProb) {
+          lines.push({
+            points: [nodes[i], nodes[j]],
+            color: "#509EF0",
+            opacity: 0.5,
+            lineWidth: 1.5
+          });
+        }
+      }
+    }
+    
+    // Add node markers
+    nodes.forEach(node => {
+      const size = 0.1;
+      lines.push({
+        points: [
+          [node[0] - size, node[1], node[2]],
+          [node[0] + size, node[1], node[2]]
+        ],
+        color: "#509EF0",
+        opacity: 1,
+        lineWidth: 2
+      });
+      lines.push({
+        points: [
+          [node[0], node[1] - size, node[2]],
+          [node[0], node[1] + size, node[2]]
+        ],
+        color: "#509EF0",
+        opacity: 1,
+        lineWidth: 2
+      });
+    });
+    
+    return lines;
+  },
+
+  spiral: (params) => {
+    const lines = [];
+    const count = params.count || 5;
+    const turns = params.turns || 3;
+    const radiusStart = params.radius_start || 0.5;
+    const radiusEnd = params.radius_end || 5;
+    const heightVar = params.height_variation || 2;
+    
+    for (let i = 0; i < count; i++) {
+      const points = [];
+      const spiralTurns = turns * (1 + i * 0.1);
+      const radiusScale = radiusStart + (radiusEnd - radiusStart) * (i / count);
+      
+      for (let t = 0; t <= spiralTurns * Math.PI * 2; t += 0.1) {
+        const radius = radiusScale * (t / (spiralTurns * Math.PI * 2));
+        const x = Math.cos(t) * radius;
+        const y = Math.sin(t) * radius;
+        const z = Math.sin(t * 2) * heightVar * (i / count);
+        points.push([x, y, z]);
+      }
+      
+      lines.push({
+        points: points,
+        color: "#509EF0",
+        opacity: 0.8 - i * 0.1,
+        lineWidth: 1.5
+      });
+    }
+    return lines;
+  },
+
+  wave: (params) => {
+    const lines = [];
+    const frequency = params.frequency || 2;
+    const amplitude = params.amplitude || 3;
+    const segments = params.segments || 100;
+    const harmonics = params.harmonics || 3;
+    
+    for (let harmonic = 1; harmonic <= harmonics; harmonic++) {
+      const points = [];
+      const freq = frequency * harmonic;
+      const amp = amplitude / harmonic;
+      
+      for (let i = 0; i < segments; i++) {
+        const x = (i / segments - 0.5) * 12;
+        const y = Math.sin(x * freq) * amp;
+        const z = Math.cos(x * freq * 0.5) * amp * 0.3;
+        points.push([x, y, z]);
+      }
+      
+      lines.push({
+        points: points,
+        color: "#509EF0",
+        opacity: 0.8 / harmonic,
+        lineWidth: 1.5
+      });
+    }
+    
+    return lines;
+  },
+
+  scatter: (params) => {
+    const lines = [];
+    const count = params.count || 100;
+    const distribution = params.distribution || "random";
+    const bounds = params.bounds || [-5, 5];
+    
+    for (let i = 0; i < count; i++) {
+      let x, y, z;
+      
+      if (distribution === "exponential") {
+        const t = (Math.random() - 0.5) * 8;
+        x = t;
+        y = t > 0 ? Math.exp(t * 0.3) - 1 : (Math.random() - 0.5) * 2;
+        z = (Math.random() - 0.5) * 2;
+      } else if (distribution === "clustered") {
+        const clusterCenter = [(Math.random() - 0.5) * bounds[1], (Math.random() - 0.5) * bounds[1]];
+        x = clusterCenter[0] + (Math.random() - 0.5) * 2;
+        y = clusterCenter[1] + (Math.random() - 0.5) * 2;
+        z = (Math.random() - 0.5) * 2;
+      } else {
+        x = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
+        y = (Math.random() - 0.5) * (bounds[1] - bounds[0]);
+        z = (Math.random() - 0.5) * 4;
+      }
+      
+      // Create small cross for each point
+      const size = 0.05;
+      lines.push({
+        points: [[x-size, y, z], [x+size, y, z]],
+        color: "#509EF0",
+        opacity: 0.7,
+        lineWidth: 1
+      });
+      lines.push({
+        points: [[x, y-size, z], [x, y+size, z]],
+        color: "#509EF0",
+        opacity: 0.7,
+        lineWidth: 1
+      });
+    }
+    
+    return lines;
+  }
+};
+
+// Main generation function that converts algorithms to lines
+function generateFromAlgorithms(algorithmData) {
+  const allLines = [];
+  
+  console.log(`Processing ${algorithmData.algorithms.length} algorithms`);
+  
+  algorithmData.algorithms.forEach((algorithm, index) => {
+    console.log(`Processing algorithm ${index + 1}: ${algorithm.type}`);
+    
+    if (algorithmGenerators[algorithm.type]) {
+      const lines = algorithmGenerators[algorithm.type](algorithm.params);
+      allLines.push(...lines);
+      console.log(`Generated ${lines.length} lines from ${algorithm.type}`);
+    } else {
+      console.warn(`Unknown algorithm type: ${algorithm.type}`);
+    }
+  });
+  
+  console.log(`Total lines generated: ${allLines.length}`);
+  
+  return {
+    title: algorithmData.title,
+    description: algorithmData.description,
+    lines: allLines,
+    camera: algorithmData.camera || { position: [8, 6, 10], lookAt: [0, 0, 0] },
+    metadata: {
+      generated_at: new Date().toISOString(),
+      algorithms_used: algorithmData.algorithms.map(a => a.type),
+      total_lines: allLines.length
+    }
+  };
 }
